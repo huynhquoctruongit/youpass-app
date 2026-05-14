@@ -1,2 +1,0 @@
-# youpass-app
-YouPass App
