@@ -21,6 +21,7 @@ interface AuthContextValue {
   isLogin: boolean | null;
   isLoading: boolean;
   loginWithGoogle: (accessToken: string) => Promise<void>;
+  loginWithEmailPassword: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   getProfile: () => Promise<void>;
 }
@@ -44,6 +45,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async (accessToken: string) => {
     const data = await authApi.loginWithGoogle(accessToken);
+    if (data?.access_token) {
+      await SecureStore.setItemAsync("auth_token", data.access_token);
+    }
+    await fetchProfile();
+  };
+
+  const loginWithEmailPassword = async (email: string, password: string) => {
+    const data = await authApi.loginWithEmailPassword(email, password);
     if (data?.access_token) {
       await SecureStore.setItemAsync("auth_token", data.access_token);
     }
@@ -74,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLogin: isLoading ? null : profile ? true : false,
         isLoading,
         loginWithGoogle,
+        loginWithEmailPassword,
         logout,
         getProfile: fetchProfile,
       }}
