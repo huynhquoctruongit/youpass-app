@@ -16,6 +16,15 @@ interface WelcomeAction {
 
 const actions: WelcomeAction[] = [
   {
+    id: "my-progress",
+    title: "Tiến độ học",
+    description: "Xem roadmap, bài tiếp theo và reflection",
+    icon: "calendar",
+    route: "/(tabs)/my-progress",
+    color: "#f97316",
+    bg: "#fff7ed",
+  },
+  {
     id: "reading",
     title: "Reading",
     description: "Luyện đọc với kho đề phong phú",
