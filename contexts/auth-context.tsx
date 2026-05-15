@@ -2,15 +2,18 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import { authApi } from "@/services/api/auth";
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   email: string;
   fullname?: string;
   first_name?: string;
   last_name?: string;
+  phone?: string;
   avatar?: string;
   external_avatar?: string;
   role?: { name: string };
+  date_created?: string;
+  user_subscription?: { id?: string; name?: string; expired_at?: string } | null;
 }
 
 interface AuthContextValue {
