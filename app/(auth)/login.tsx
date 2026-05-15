@@ -1,5 +1,6 @@
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
+import * as SecureStore from "expo-secure-store";
 import {
   ActivityIndicator,
   Alert,
@@ -56,6 +57,16 @@ export default function LoginScreen() {
     }
   };
 
+  const handlePressLogin = async () => {
+    if (request?.codeVerifier) {
+      await SecureStore.setItemAsync("oauth_code_verifier", request.codeVerifier);
+    }
+    if (request?.redirectUri) {
+      await SecureStore.setItemAsync("oauth_redirect_uri", request.redirectUri);
+    }
+    promptAsync();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -73,7 +84,7 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={styles.googleButton}
-          onPress={() => promptAsync()}
+          onPress={handlePressLogin}
           disabled={!request || loading}
           activeOpacity={0.8}
         >
