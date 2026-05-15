@@ -29,10 +29,18 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (response?.type === "success") {
-      const { access_token } = response.authentication ?? {};
-      if (access_token) {
-        handleLoginWithToken(access_token);
+      const accessToken = response.authentication?.accessToken;
+      if (accessToken) {
+        handleLoginWithToken(accessToken);
       }
+    } else if (response?.type === "error") {
+      console.log("[GoogleAuth] error:", response.error, response.params);
+      const message =
+        (response.params as Record<string, string> | undefined)?.error_description ??
+        (response.params as Record<string, string> | undefined)?.error ??
+        response.error?.message ??
+        "Unknown error";
+      Alert.alert("Lỗi đăng nhập Google", message);
     }
   }, [response]);
 
