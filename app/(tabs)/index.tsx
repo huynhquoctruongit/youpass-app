@@ -6,6 +6,7 @@ import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Link } from 'expo-router';
+import { Text } from 'react-native';
 
 export default function HomeScreen() {
   return (
@@ -18,7 +19,8 @@ export default function HomeScreen() {
         />
       }>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
+        {/* <ThemedText className="text-2xl font-bold text-blue-600" type="title">Welcome!</ThemedText> */}
+        <Text className="text-2xl font-bold text-blue-600">Welcome!</Text>
         <HelloWave />
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
