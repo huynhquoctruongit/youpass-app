@@ -12,7 +12,6 @@ export const getFullName = (profile?: UserProfile | null): string => {
 
 export const getAvatarUrl = (profile?: UserProfile | null): string => {
   if (!profile) return FALLBACK_AVATAR;
-  if (profile.external_avatar) return profile.external_avatar;
   if (profile.avatar) return `${CMS_DOMAIN}/assets/${profile.avatar}`;
   return FALLBACK_AVATAR;
 };
