@@ -2,66 +2,23 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Linking from "expo-linking";
 import type { ComponentProps, ReactNode } from "react";
 import { useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Button, Modal, Pressable, RefreshControl, ScrollView, Text, TextInput, View, } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/hooks/use-auth";
 import { useStudyProgress } from "@/hooks/use-study-plan";
 import { studyApi } from "@/services/api/study";
 import {
-  buildStudyItemUrl,
-  buildWeekRows,
-  CHALLENGES_OPTIONS,
-  convertMinsToHrsMins,
-  countItemsBySkill,
-  DEFAULT_WEEK_REFLECTION_DATA,
-  findPreviousStudyWeek,
-  findStudyWeekForToday,
-  formatDate,
-  formatDateTime,
-  getBandScore,
-  isDateBetween,
-  isFutureDate,
-  ITEM_TYPE_LABELS,
-  MOOD_OPTIONS,
-  toDateKey,
+  buildStudyItemUrl, buildWeekRows, CHALLENGES_OPTIONS, convertMinsToHrsMins, countItemsBySkill, DEFAULT_WEEK_REFLECTION_DATA, findPreviousStudyWeek, findStudyWeekForToday, formatDate, formatDateTime, getBandScore, isDateBetween, isFutureDate, ITEM_TYPE_LABELS, MOOD_OPTIONS, toDateKey,
 } from "@/services/helpers/study";
 import { getFullName } from "@/services/helpers/user";
-import type {
-  StudentStudyItem,
-  StudentStudyWeek,
-  StudyClassMeta,
-  StudyPlan,
-  StudyPlanDetail,
-  StudyWeekDetail,
-  WeekReflectionFormData,
-} from "@/types/study";
+import type { StudentStudyItem, StudentStudyWeek, StudyClassMeta, StudyPlan, StudyPlanDetail, StudyWeekDetail, WeekReflectionFormData, } from "@/types/study";
+import { Button as ButtonSystem } from "@/components/ui/button-system";
 
 type MaterialIconName = ComponentProps<typeof MaterialIcons>["name"];
 
 export function MyProgressScreen() {
   const { profile, isLoading: authLoading } = useAuth();
-  const {
-    activeWeek,
-    error,
-    loading,
-    planActive,
-    planDetail,
-    refresh,
-    refreshWeek,
-    selectWeek,
-    weekDetail,
-    weekLoading,
-  } = useStudyProgress();
+  const { activeWeek, error, loading, planActive, planDetail, refresh, refreshWeek, selectWeek, weekDetail, weekLoading } = useStudyProgress();
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = async () => {
@@ -145,9 +102,9 @@ export function MyProgressScreen() {
 function Header({ fullName }: { fullName: string }) {
   return (
     <View className="px-1">
-      <Text className="text-sm text-neutral-500">Study plan của tôi</Text>
+      <Text className="text-t4-regular text-neutral-500">Study plan của tôi</Text>
       <Text className="mt-1 text-2xl font-bold text-neutral-900">
-        Chào mừng <Text className="text-orange-500">{fullName}</Text>
+        Chào mừng <Text className="text-primary-01">{fullName}</Text>
       </Text>
     </View>
   );
@@ -189,9 +146,8 @@ function RoadmapCard({
             <Pressable
               key={week.id}
               onPress={() => selectWeek(week)}
-              className={`w-14 items-center rounded-xl border px-2 py-3 ${
-                isActive ? "border-orange-500 bg-orange-50" : "border-neutral-200 bg-white"
-              }`}
+              className={`w-14 items-center rounded-xl border px-2 py-3 ${isActive ? "border-orange-500 bg-orange-50" : "border-neutral-200 bg-white"
+                }`}
             >
               {isCurrent ? <MaterialIcons name="arrow-drop-down" size={20} color="#f97316" /> : null}
               <View className="h-24 w-8 justify-end overflow-hidden rounded-md bg-neutral-200">
@@ -397,9 +353,8 @@ function WeekProgress({
               return (
                 <View
                   key={day.date}
-                  className={`h-9 w-9 items-center justify-center rounded-full border ${
-                    isActive ? "border-green-200 bg-green-100" : isToday ? "border-orange-500 bg-white" : "border-transparent bg-neutral-50"
-                  } ${!day.inRange ? "opacity-30" : ""}`}
+                  className={`h-9 w-9 items-center justify-center rounded-full border ${isActive ? "border-green-200 bg-green-100" : isToday ? "border-orange-500 bg-white" : "border-transparent bg-neutral-50"
+                    } ${!day.inRange ? "opacity-30" : ""}`}
                 >
                   <Text className={`text-xs font-bold ${isActive ? "text-green-600" : "text-neutral-500"}`}>
                     {day.label}
@@ -602,9 +557,8 @@ function TaskCard({
   return (
     <Pressable
       onPress={openLesson}
-      className={`flex-row gap-3 border-b border-neutral-100 p-4 last:border-b-0 ${
-        variant === "highlight" ? "rounded-xl border border-orange-200 bg-orange-50" : "bg-white"
-      } ${(isDisabled || isPastUnavailable) && !isCanLearn ? "opacity-50" : ""}`}
+      className={`flex-row gap-3 border-b border-neutral-100 p-4 last:border-b-0 ${variant === "highlight" ? "rounded-xl border border-orange-200 bg-orange-50" : "bg-white"
+        } ${(isDisabled || isPastUnavailable) && !isCanLearn ? "opacity-50" : ""}`}
     >
       <View className={`h-10 w-10 items-center justify-center rounded-xl ${isDone ? "bg-green-100" : "bg-orange-100"}`}>
         <MaterialIcons
@@ -745,18 +699,8 @@ function ReflectionModal({
           </ScrollView>
 
           <View className="mt-5 flex-row gap-3">
-            <Pressable onPress={onClose} className="flex-1 rounded-full border border-neutral-200 py-3">
-              <Text className="text-center font-bold text-neutral-700">Hủy</Text>
-            </Pressable>
-            <Pressable
-              disabled={!canSave || saving}
-              onPress={save}
-              className={`flex-1 rounded-full py-3 ${canSave && !saving ? "bg-orange-500" : "bg-neutral-200"}`}
-            >
-              <Text className={`text-center font-bold ${canSave && !saving ? "text-white" : "text-neutral-500"}`}>
-                {saving ? "Đang lưu..." : "Lưu"}
-              </Text>
-            </Pressable>
+            <ButtonSystem variant="secondary-default" size="lg" onPress={onClose} className="">Hủy bỏ</ButtonSystem>
+            <ButtonSystem variant="primary-default" size="lg" onPress={save} className="">Lưu thay đổi</ButtonSystem>
           </View>
         </View>
       </View>
@@ -817,9 +761,8 @@ function Chip({ active, label, onPress }: { active: boolean; label: string; onPr
   return (
     <Pressable
       onPress={onPress}
-      className={`rounded-full border px-3 py-2 ${
-        active ? "border-orange-500 bg-orange-50" : "border-neutral-200 bg-white"
-      }`}
+      className={`rounded-full border px-3 py-2 ${active ? "border-orange-500 bg-orange-50" : "border-neutral-200 bg-white"
+        }`}
     >
       <Text className={`text-sm ${active ? "font-semibold text-orange-600" : "text-neutral-700"}`}>{label}</Text>
     </Pressable>
