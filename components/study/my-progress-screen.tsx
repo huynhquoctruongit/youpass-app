@@ -13,9 +13,8 @@ import {
 import { getFullName } from "@/services/helpers/user";
 import type { StudentStudyItem, StudentStudyWeek, StudyClassMeta, StudyPlan, StudyPlanDetail, StudyWeekDetail, WeekReflectionFormData, } from "@/types/study";
 import { Button as ButtonSystem } from "@/components/ui/button-system";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/services/constant";
-
+import { DrawerActions, useNavigation } from "@react-navigation/native";
 type MaterialIconName = ComponentProps<typeof MaterialIcons>["name"];
 
 export function MyProgressScreen() {
@@ -80,11 +79,11 @@ export function MyProgressScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Header fullName={getFullName(profile)} />
-        <RoadmapCard
+        {/* <RoadmapCard
           activeWeek={activeWeek}
           planDetail={planDetail}
           selectWeek={selectWeek}
-        />
+        /> */}
         <WeekDashboard
           activeWeek={activeWeek}
           classMeta={planActive.class_meta}
@@ -102,9 +101,18 @@ export function MyProgressScreen() {
 }
 
 function Header({ fullName }: { fullName: string }) {
+  const navigation = useNavigation();
+
+  const openDrawer = () => {
+    navigation.dispatch(DrawerActions.openDrawer());
+  };
+
   return (
-    <View className="px-1">
-      <Text className="mt-1 text-2xl font-bold text-neutral-900">
+    <View className="px-1 flex flex-row gap-2 items-center">
+      <Pressable className="pt-0.5" onPress={openDrawer} accessibilityLabel="Mở menu">
+        <MaterialIcons name="menu" size={24} color={Colors.dark["50"]} />
+      </Pressable>
+      <Text className="mt-1 text-t3-bold text-dark-75">
         Chào mừng <Text className="text-primary-01">{fullName}</Text>
       </Text>
     </View>
@@ -699,9 +707,9 @@ function ReflectionModal({
             </View>
           </ScrollView>
 
-          <View className="mt-5 flex-row gap-3">
-            <ButtonSystem variant="secondary-default" size="lg" onPress={onClose} className="">Hủy bỏ</ButtonSystem>
-            <ButtonSystem variant="primary-default" size="lg" onPress={save} className="">Lưu thay đổi</ButtonSystem>
+          <View className="mt-5 flex-row gap-3 ">
+            <ButtonSystem variant="secondary-default" size="xs" onPress={onClose} className="ml-auto">Hủy bỏ</ButtonSystem>
+            <ButtonSystem variant="primary-default" size="xs" onPress={save} className="">Lưu thay đổi</ButtonSystem>
           </View>
         </View>
       </View>
