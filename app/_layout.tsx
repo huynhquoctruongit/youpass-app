@@ -9,6 +9,8 @@ import { View, Text } from 'react-native';
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider } from "@/contexts/auth-context";
 import { useAuth } from "@/hooks/use-auth";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
+import "@/services/helpers/notifications-background";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -34,6 +36,11 @@ function NavigationGuard() {
   return null;
 }
 
+function PushNotificationsBridge() {
+  usePushNotifications();
+  return null;
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
@@ -41,6 +48,7 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <AuthProvider>
         <NavigationGuard />
+        <PushNotificationsBridge />
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />

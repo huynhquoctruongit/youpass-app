@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "701502544472",
+    "project_id": "youpass-notify",
+    "storage_bucket": "youpass-notify.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:701502544472:android:c24f807437a7a18e91482d",
+        "android_client_info": {
+          "package_name": "vn.youpass.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1v2QZKxsl9nDOaACRTIBvJ85Q-lwBXFo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
