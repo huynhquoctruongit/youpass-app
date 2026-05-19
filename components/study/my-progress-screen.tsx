@@ -13,6 +13,8 @@ import {
 import { getFullName } from "@/services/helpers/user";
 import type { StudentStudyItem, StudentStudyWeek, StudyClassMeta, StudyPlan, StudyPlanDetail, StudyWeekDetail, WeekReflectionFormData, } from "@/types/study";
 import { Button as ButtonSystem } from "@/components/ui/button-system";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Colors } from "@/services/constant";
 
 type MaterialIconName = ComponentProps<typeof MaterialIcons>["name"];
 
@@ -102,7 +104,6 @@ export function MyProgressScreen() {
 function Header({ fullName }: { fullName: string }) {
   return (
     <View className="px-1">
-      <Text className="text-t4-regular text-neutral-500">Study plan của tôi</Text>
       <Text className="mt-1 text-2xl font-bold text-neutral-900">
         Chào mừng <Text className="text-primary-01">{fullName}</Text>
       </Text>

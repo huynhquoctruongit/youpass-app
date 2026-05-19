@@ -21,44 +21,19 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
           style={{ width: 96, height: 96, borderRadius: 48 }}
           contentFit="cover"
         />
-        {isUnlimited && (
-          <View className="absolute -bottom-1 right-0 bg-amber-400 rounded-full px-2 py-0.5">
-            <Text className="text-[10px] font-bold text-white">PRO</Text>
-          </View>
-        )}
       </View>
 
-      <Text className="text-xl font-bold text-neutral-900 mt-4" numberOfLines={1}>
+      <Text className="text-t3-bold text-dark-75 mt-4" numberOfLines={1}>
         {fullName}
       </Text>
-      <Text className="text-sm text-neutral-500 mt-1" numberOfLines={1}>
+      <Text className="text-t4-regular text-dark-50 mt-1" numberOfLines={1}>
         {profile.email}
       </Text>
-
-      <View className="flex-row gap-2 mt-3">
-        {roleName ? (
-          <View className="px-3 py-1 rounded-full bg-orange-100 border border-orange-200">
-            <Text className="text-xs font-medium text-orange-600">{roleName}</Text>
-          </View>
-        ) : null}
-        <View
-          className={
-            "px-3 py-1 rounded-full border " +
-            (isUnlimited
-              ? "bg-amber-50 border-amber-200"
-              : "bg-neutral-50 border-neutral-200")
-          }
-        >
-          <Text
-            className={
-              "text-xs font-medium " +
-              (isUnlimited ? "text-amber-700" : "text-neutral-500")
-            }
-          >
-            {isUnlimited ? "Unlimited" : "Free"}
-          </Text>
-        </View>
-      </View>
+      {profile.phone_number && (
+        <Text className="text-t4-regular text-teritary-06 mt-1" numberOfLines={1}>
+          {profile.phone_number}
+        </Text>
+      )}
     </View>
   );
 }
