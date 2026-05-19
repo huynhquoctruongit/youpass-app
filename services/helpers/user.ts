@@ -1,7 +1,7 @@
 import type { UserProfile } from "@/contexts/auth-context";
 
 const CMS_DOMAIN = process.env.EXPO_PUBLIC_CMS || "https://cms.youpass.vn";
-const FALLBACK_AVATAR = "https://www.gravatar.com/avatar/?d=mp&s=160";
+const FALLBACK_AVATAR = "https://cms.youpass.vn/assets/b103aa05-604e-4607-86a4-e7b8b284d5e9";
 
 export const getFullName = (profile?: UserProfile | null): string => {
   if (!profile) return "";
