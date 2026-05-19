@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ActivityIndicator, Alert, Text, TouchableOpacity } from "react-native";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Colors } from "@/services/constant";
 
 interface LogoutButtonProps {
   onLogout: () => Promise<void> | void;
@@ -45,15 +46,15 @@ export function LogoutButton({ onLogout }: LogoutButtonProps) {
       style={{ opacity: loading ? 0.6 : 1 }}
     >
       {loading ? (
-        <ActivityIndicator size="small" color="#dc2626" />
+        <ActivityIndicator size="small" color={Colors.dark["50"]} />
       ) : (
         <IconSymbol
           name="rectangle.portrait.and.arrow.right.fill"
           size={18}
-          color="#dc2626"
+          color={Colors.dark["50"]}
         />
       )}
-      <Text className="text-red-600 font-semibold text-base">Đăng xuất</Text>
+      <Text className="text-dark-75 text-t3-bold">Đăng xuất</Text>
     </TouchableOpacity>
   );
 }

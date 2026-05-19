@@ -59,7 +59,9 @@ export default function ProfileScreen() {
 
         <ProfileHeader profile={profile} />
         <ProfileInfo profile={profile} />
-        <LogoutButton onLogout={logout} />
+        <View className="mt-4">
+          <LogoutButton onLogout={logout} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

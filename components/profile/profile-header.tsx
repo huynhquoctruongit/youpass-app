@@ -1,7 +1,7 @@
-import { Image } from "expo-image";
-import { Text, View } from "react-native";
 import type { UserProfile } from "@/contexts/auth-context";
 import { getAvatarUrl, getFullName } from "@/services/helpers/user";
+import { Image } from "expo-image";
+import { Text, View } from "react-native";
 
 interface ProfileHeaderProps {
   profile: UserProfile;
@@ -10,9 +10,8 @@ interface ProfileHeaderProps {
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
   const fullName = getFullName(profile) || "Học viên YouPass";
   const avatar = getAvatarUrl(profile);
-  const roleName = profile.role?.name;
+  const { phone_number } = profile;
   const isUnlimited = !!profile.user_subscription;
-
   return (
     <View className="bg-white rounded-3xl p-6 items-center shadow-sm border border-neutral-100">
       <View className="relative">
@@ -34,31 +33,11 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
       <Text className="text-sm text-neutral-500 mt-1" numberOfLines={1}>
         {profile.email}
       </Text>
-
-      <View className="flex-row gap-2 mt-3">
-        {roleName ? (
-          <View className="px-3 py-1 rounded-full bg-orange-100 border border-orange-200">
-            <Text className="text-xs font-medium text-orange-600">{roleName}</Text>
-          </View>
-        ) : null}
-        <View
-          className={
-            "px-3 py-1 rounded-full border " +
-            (isUnlimited
-              ? "bg-amber-50 border-amber-200"
-              : "bg-neutral-50 border-neutral-200")
-          }
-        >
-          <Text
-            className={
-              "text-xs font-medium " +
-              (isUnlimited ? "text-amber-700" : "text-neutral-500")
-            }
-          >
-            {isUnlimited ? "Unlimited" : "Free"}
-          </Text>
-        </View>
-      </View>
+      {phone_number && (
+        <Text className="text-t3-regular text-teritary-06 mt-1" numberOfLines={1}>
+          {phone_number}
+        </Text>
+      )}
     </View>
   );
 }

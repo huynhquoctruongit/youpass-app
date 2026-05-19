@@ -1,9 +1,9 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as Linking from "expo-linking";
 import type { ComponentProps, ReactNode } from "react";
-import { useRef, useState } from "react";
-import { ActivityIndicator, Alert, Button, Modal, Pressable, RefreshControl, ScrollView, Text, TextInput, View, } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Animated, Button, Dimensions, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/hooks/use-auth";
 import { useStudyProgress } from "@/hooks/use-study-plan";
 import { studyApi } from "@/services/api/study";
@@ -13,6 +13,7 @@ import {
 import { getFullName } from "@/services/helpers/user";
 import type { StudentStudyItem, StudentStudyWeek, StudyClassMeta, StudyPlan, StudyPlanDetail, StudyWeekDetail, WeekReflectionFormData, } from "@/types/study";
 import { Button as ButtonSystem } from "@/components/ui/button-system";
+import { Colors } from "@/services/constant";
 
 type MaterialIconName = ComponentProps<typeof MaterialIcons>["name"];
 
@@ -100,12 +101,84 @@ export function MyProgressScreen() {
 }
 
 function Header({ fullName }: { fullName: string }) {
+  const [openMenu, setOpenMenu] = useState(false);
+  const screenW = Dimensions.get("window").width;
+  const slideX = useRef(new Animated.Value(-screenW)).current;
+
+  const backdropOpacity = useMemo(
+    () =>
+      slideX.interpolate({
+        inputRange: [-screenW, 0],
+        outputRange: [0.45, 0],
+        extrapolate: "clamp",
+      }),
+    [slideX, screenW],
+  );
+
+  useEffect(() => {
+    if (!openMenu) return;
+    const w = Dimensions.get("window").width;
+    slideX.setValue(-w);
+    Animated.timing(slideX, {
+      toValue: 0,
+      duration: 280,
+      useNativeDriver: true,
+    }).start();
+  }, [openMenu, slideX]);
+
+  const closeMenu = () => {
+    const w = Dimensions.get("window").width;
+    Animated.timing(slideX, {
+      toValue: -w,
+      duration: 260,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) setOpenMenu(false);
+    });
+  };
+
+  const handleOpenMenu = () => {
+    if (openMenu) closeMenu();
+    else setOpenMenu(true);
+  };
+
   return (
-    <View className="px-1">
-      <Text className="text-t4-regular text-neutral-500">Study plan của tôi</Text>
-      <Text className="mt-1 text-2xl font-bold text-neutral-900">
+    <View className="px-1 flex flex-row gap-2 items-center">
+      <Pressable className="pt-0.5" onPress={handleOpenMenu}>
+        <MaterialIcons name="menu" size={24} color={Colors.dark["50"]} accessibilityLabel="Menu" />
+      </Pressable>
+      <Text className="mt-1 text-t3-semibold text-dark-75">
         Chào mừng <Text className="text-primary-01">{fullName}</Text>
       </Text>
+      <Modal
+        visible={openMenu}
+        animationType="none"
+        transparent
+        presentationStyle="overFullScreen"
+        onRequestClose={closeMenu}
+      >
+        <View style={{ flex: 1 }}>
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFillObject,
+              { backgroundColor: "#000", opacity: backdropOpacity },
+            ]}
+          />
+          <SafeAreaProvider>
+            <Animated.View style={{ flex: 1, backgroundColor: "#fff", transform: [{ translateX: slideX }] }}>
+              <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+                <View className="flex-row items-center px-4 py-3">
+                  <Text className="text-lg font-bold text-neutral-900">Menu</Text>
+                  <Pressable className="ml-auto" onPress={closeMenu} hitSlop={12} accessibilityLabel="Đóng menu">
+                    <MaterialIcons name="close" size={28} color={Colors.dark["50"]} />
+                  </Pressable>
+                </View>
+              </SafeAreaView>
+            </Animated.View>
+          </SafeAreaProvider>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -699,8 +772,8 @@ function ReflectionModal({
           </ScrollView>
 
           <View className="mt-5 flex-row gap-3">
-            <ButtonSystem variant="secondary-default" size="lg" onPress={onClose} className="">Hủy bỏ</ButtonSystem>
-            <ButtonSystem variant="primary-default" size="lg" onPress={save} className="">Lưu thay đổi</ButtonSystem>
+            <ButtonSystem variant="secondary-default" size="xs" onPress={onClose} className="">Hủy bỏ</ButtonSystem>
+            <ButtonSystem variant="primary-default" size="xs" onPress={save} className="">Lưu thay đổi</ButtonSystem>
           </View>
         </View>
       </View>

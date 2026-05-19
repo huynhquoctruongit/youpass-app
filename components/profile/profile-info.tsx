@@ -24,8 +24,6 @@ const formatDate = (value?: string) => {
 };
 
 const buildRows = (profile: UserProfile): InfoRow[] => [
-  { icon: "person.fill", label: "User ID", value: profile.id || "—" },
-  { icon: "envelope.fill", label: "Email", value: profile.email || "—" },
   {
     icon: "person.fill",
     label: "Họ và tên",
@@ -34,25 +32,18 @@ const buildRows = (profile: UserProfile): InfoRow[] => [
       `${profile.first_name || ""} ${profile.last_name || ""}`.trim() ||
       "—",
   },
-  { icon: "shield.fill", label: "Vai trò", value: profile.role?.name || "—" },
-  {
-    icon: "calendar",
-    label: "Ngày tạo",
-    value: formatDate(profile.date_created),
-  },
+  { icon: "envelope.fill", label: "Email", value: profile.email || "—" },
+  { icon: "phone.fill", label: "Số điện thoại", value: profile.phone_number || "—" },
 ];
 
 export function ProfileInfo({ profile }: ProfileInfoProps) {
   const rows = buildRows(profile);
 
   return (
-    <View className="bg-white rounded-3xl border border-neutral-100 overflow-hidden">
+    <View className="bg-white rounded-3xl border border-neutral-100 shadow-sm">
       <View className="px-5 pt-5 pb-2">
-        <Text className="text-base font-semibold text-neutral-900">
+        <Text className="text-t2-semibold text-neutral-900">
           Thông tin tài khoản
-        </Text>
-        <Text className="text-xs text-neutral-500 mt-1">
-          Dữ liệu lấy từ endpoint /v1/users/me
         </Text>
       </View>
 

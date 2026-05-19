@@ -1,11 +1,11 @@
-import { Image } from "expo-image";
-import { Text, View } from "react-native";
 import type { UserProfile } from "@/contexts/auth-context";
 import {
   getAvatarUrl,
   getFullName,
   getGreetingByHour,
 } from "@/services/helpers/user";
+import { Image } from "expo-image";
+import { Text, View } from "react-native";
 
 interface WelcomeHeroProps {
   profile: UserProfile;

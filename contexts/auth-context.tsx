@@ -8,7 +8,7 @@ export interface UserProfile {
   fullname?: string;
   first_name?: string;
   last_name?: string;
-  phone?: string;
+  phone_number?: string;
   avatar?: string;
   external_avatar?: string;
   role?: { name: string };
