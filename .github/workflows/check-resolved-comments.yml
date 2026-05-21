@@ -1,39 +1,55 @@
-name: Next.js AI Line Reviewer (Direct Inline)
+name: Next.js AI Line Reviewer (OpenRouter)
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write
+  issues: write
 
 jobs:
-  review:
+  ai-review:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Ghim thẳng comment công khai vào từng dòng code
-        uses: anc95/ChatGPT-CodeReview@main
+      - name: PR Agent Review
+        uses: Codium-ai/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-          # Đấu nối tài khoản OpenRouter Paid của bạn
-          OPENAI_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          OPENAI_API_BASE: "https://openrouter.ai/api/v1"
-          
-          # Gọi siêu mẫu Claude 3.5 Sonnet quét luồng & import
-          MODEL: "anthropic/claude-3.5-sonnet"
-          
-          LANGUAGE: "Vietnamese"
-          PROMPT: |
-            Bạn là một Principal Engineer chuyên trị Next.js, React và TypeScript.
-            Hãy duyệt qua các dòng code thay đổi trong PR này (đặc biệt là phần import và useEffect).
-            CHỈ tạo comment vào chính xác dòng code nào vi phạm các tiêu chí sau:
-            1. Sắp xếp import lộn xộn: Gom các dòng "Import Name" ({ ... }) nằm chung với nhau và các dòng "Import Default" nằm chung với nhau theo từng nhóm (thư viện ngoài -> alias nội bộ @/ -> đường dẫn tương đối).
-            2. Rò rỉ bộ nhớ (Memory Leaks): useEffect thiếu cleanup function khi đăng ký sự kiện hoặc loop.
-            3. Bảo mật: Lộ biến môi trường bí mật hoặc xử lý logic lỏng lẻo.
-            
-            Nếu dòng code vi phạm, hãy đưa ra nhận xét khắt khe, giải thích lý do nguy hiểm và cung cấp đoạn code refactor mẫu ngay trong bình luận. Không khen ngợi dạo.
+
+          # --- Cấu hình model qua OpenRouter ---
+          OPENAI__KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENAI__API_BASE: "https://openrouter.ai/api/v1"
+          CONFIG__MODEL: "openrouter/anthropic/claude-3.5-sonnet"
+          CONFIG__MODEL_TURBO: "openrouter/anthropic/claude-3.5-sonnet"
+          CONFIG__FALLBACK_MODELS: '["openrouter/anthropic/claude-3.5-sonnet"]'
+
+          # --- Tự động chạy tool nào khi mở PR ---
+          GITHUB_ACTION_CONFIG__AUTO_REVIEW: "true"
+          GITHUB_ACTION_CONFIG__AUTO_DESCRIBE: "false"
+          GITHUB_ACTION_CONFIG__AUTO_IMPROVE: "true"
+
+          # --- /review: ghim nhận xét vào từng dòng ---
+          PR_REVIEWER__INLINE_CODE_COMMENTS: "true"
+          PR_REVIEWER__PERSISTENT_COMMENT: "false"
+          PR_REVIEWER__FINAL_UPDATE_MESSAGE: "false"
+
+          # --- /improve: đẩy code suggestion vào diff (tab Files changed) ---
+          PR_CODE_SUGGESTIONS__COMMITABLE_SUGGESTIONS: "true"
+          PR_CODE_SUGGESTIONS__NUM_CODE_SUGGESTIONS: "10"
+
+          # --- Ngôn ngữ + bộ quy tắc ---
+          CONFIG__RESPONSE_LANGUAGE: "Vietnamese"
+          PR_REVIEWER__EXTRA_INSTRUCTIONS: |
+            Bạn là Principal Engineer / Security Auditor kỳ cựu về Next.js, React, TypeScript.
+            Chỉ comment vào những dòng vi phạm nghiêm trọng:
+            1. Import sorting: nhóm thư viện ngoài, alias (@/...), đường dẫn tương đối (../, ./) tách rõ ràng.
+            2. Async/await thiếu try/catch, logic lồng phức tạp dễ crash.
+            3. Memory leak: useEffect/useMemo/useCallback thiếu cleanup, thiếu dependency array gây re-render vô hạn.
+            4. Security: rò rỉ token/API key, dùng nhầm NEXT_PUBLIC_.
+            Văn phong khắt khe, chỉ rõ dòng lỗi, giải thích tại sao nguy hiểm, đưa code sửa mẫu.
