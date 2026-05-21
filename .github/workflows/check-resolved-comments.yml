@@ -10,7 +10,7 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write
+  pull-requests: write  # Đảm bảo quyền write để bot có quyền điền comment vào code
 
 jobs:
   ai-review:
@@ -22,18 +22,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENAI.API_BASE: "https://openrouter.ai/api/v1"
-          
-          # Sử dụng ông vua review code để nhận diện đúng cấu trúc file code
           CONFIG.MODEL: "anthropic/claude-3.5-sonnet"
           
-          # ==========================================================
-          # 🚨 CẤU HÌNH QUAN TRỌNG: ÉP AI BẮN COMMENT TRỰC TIẾP VÀO FILE
-          # ==========================================================
-          PR_REVIEWER.GIVE_REVIEW_COMMENTS: true        # Bật tính năng nhận xét từng dòng
-          PR_REVIEWER.INLINE_COMMENTS: true             # Ép găm comment vào tab "Files changed"
-          GITHUB_ACTION_CONFIG.AUTO_REVIEW: true        # Tự động quét khi phát hiện PR
-          PR_REVIEWER.PERSISTENT_COMMENT: true          # Giữ lại các nhận xét cũ nếu code chưa sửa
-          PR_REVIEWER.ENABLE_INTRO_COMMENT: false       # Tắt bớt comment chào hỏi dài dòng ở tab ngoài
+          # CẤU HÌNH ÉP LÀM MỚI VÀ ĐỔ COMMENT XUỐNG CÁC DÒNG CODE CHANGED
+          PR_REVIEWER.GIVE_REVIEW_COMMENTS: true
+          PR_REVIEWER.INLINE_COMMENTS: true
+          GITHUB_ACTION_CONFIG.AUTO_REVIEW: true
+          
+          # Bật lại thông báo tóm tắt ở tab ngoài để chúng ta nghiệm thu xem bot đã chạy chưa
+          PR_REVIEWER.ENABLE_INTRO_COMMENT: true 
+          PR_REVIEWER.PERSISTENT_COMMENT: false # Đổi thành false để mỗi lần gõ /review nó sẽ xóa comment cũ và ghi đè cái mới hoàn toàn
           
           PR_REVIEWER.LANGUAGE: "Vietnamese"
           
