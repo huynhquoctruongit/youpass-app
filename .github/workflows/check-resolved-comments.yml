@@ -23,11 +23,16 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENAI.API_BASE: "https://openrouter.ai/api/v1"
           
-         # Dùng model Free chuẩn
+          # Dùng model Free chuẩn
           CONFIG.MODEL: "google/gemini-2.5-flash:free"
           
-          # CHÍ MẠNG: Ép hạ max_tokens xuống 4000 để lách qua giới hạn 8888 của OpenRouter Free
+          # ÉP HẠ TOKEN TOÀN DIỆN: Đánh chặn mọi ngóc ngách cấu hình của bot
           CONFIG.MAX_TOKENS: 4000
+          OPENAI.MAX_TOKENS: 4000
+          Litellm.MAX_TOKENS: 4000
+          
+          # Giảm bớt dung lượng gói diff gửi đi để thu nhỏ tổng số token request
+          PR_REVIEWER.MAX_CONTEXT_TOKENS: 3000
           
           PR_REVIEWER.GIVE_REVIEW_COMMENTS: true
           GITHUB_ACTION_CONFIG.AUTO_REVIEW: true
