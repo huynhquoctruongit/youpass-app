@@ -1,4 +1,4 @@
-name: Next.js AI Line Reviewer (OpenRouter)
+name: Next.js AI Line Reviewer (OpenRouter Paid)
 
 on:
   pull_request:
@@ -17,39 +17,70 @@ jobs:
   ai-review:
     runs-on: ubuntu-latest
     steps:
-      - name: PR Agent Review
+      - name: Code Review từng dòng bằng OpenRouter Paid
         uses: Codium-ai/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-          # --- Cấu hình model qua OpenRouter ---
+          # --- Cấu hình kết nối OpenRouter ---
           OPENAI__KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENAI__API_BASE: "https://openrouter.ai/api/v1"
+
+          # --- Tên model: đúng chính tả "anthropic", đồng nhất cả 3 chỗ ---
           CONFIG__MODEL: "openrouter/anthropic/claude-3.5-sonnet"
           CONFIG__MODEL_TURBO: "openrouter/anthropic/claude-3.5-sonnet"
           CONFIG__FALLBACK_MODELS: '["openrouter/anthropic/claude-3.5-sonnet"]'
 
-          # --- Tự động chạy tool nào khi mở PR ---
+          # --- BẮT BUỘC khi dùng model qua OpenRouter: khai báo context window ---
+          CONFIG__CUSTOM_MODEL_MAX_TOKENS: "200000"
+
+          # --- Ngôn ngữ phản hồi ---
+          CONFIG__RESPONSE_LANGUAGE: "Vietnamese"
+
+          # --- Tự động chạy tool nào khi mở/đẩy PR ---
           GITHUB_ACTION_CONFIG__AUTO_REVIEW: "true"
           GITHUB_ACTION_CONFIG__AUTO_DESCRIBE: "false"
           GITHUB_ACTION_CONFIG__AUTO_IMPROVE: "true"
 
-          # --- /review: ghim nhận xét vào từng dòng ---
+          # --- /review: ghim nhận xét trực tiếp vào từng dòng code ---
           PR_REVIEWER__INLINE_CODE_COMMENTS: "true"
           PR_REVIEWER__PERSISTENT_COMMENT: "false"
           PR_REVIEWER__FINAL_UPDATE_MESSAGE: "false"
 
-          # --- /improve: đẩy code suggestion vào diff (tab Files changed) ---
+          # --- /improve: đẩy code suggestion ghim vào diff (tab Files changed) ---
           PR_CODE_SUGGESTIONS__COMMITABLE_SUGGESTIONS: "true"
           PR_CODE_SUGGESTIONS__NUM_CODE_SUGGESTIONS: "10"
 
-          # --- Ngôn ngữ + bộ quy tắc ---
-          CONFIG__RESPONSE_LANGUAGE: "Vietnamese"
+          # --- BỘ QUY TẮC PHÂN TÍCH CHUYÊN SÂU CHO /review ---
           PR_REVIEWER__EXTRA_INSTRUCTIONS: |
-            Bạn là Principal Engineer / Security Auditor kỳ cựu về Next.js, React, TypeScript.
-            Chỉ comment vào những dòng vi phạm nghiêm trọng:
-            1. Import sorting: nhóm thư viện ngoài, alias (@/...), đường dẫn tương đối (../, ./) tách rõ ràng.
-            2. Async/await thiếu try/catch, logic lồng phức tạp dễ crash.
-            3. Memory leak: useEffect/useMemo/useCallback thiếu cleanup, thiếu dependency array gây re-render vô hạn.
-            4. Security: rò rỉ token/API key, dùng nhầm NEXT_PUBLIC_.
-            Văn phong khắt khe, chỉ rõ dòng lỗi, giải thích tại sao nguy hiểm, đưa code sửa mẫu.
+            Bạn là một Chuyên gia Đánh giá Mã nguồn (Principal Engineer / Security Auditor) kỳ cựu chuyên trị Next.js, React, và TypeScript.
+            Nhiệm vụ của bạn là duyệt qua các dòng code thay đổi trong PR này và CHỈ tạo bình luận (Inline Comment) trực tiếp vào những dòng vi phạm nghiêm trọng các tiêu chí sau:
+
+            1. TIÊU CHUẨN SẮP XẾP IMPORT ĐẸP CODE (Import Sorting & Cleanliness):
+               - Kiểm tra khối import đầu file. Bắt lỗi nếu lộn xộn.
+               - Yêu cầu cấu trúc nhóm Import:
+                 + Nhóm 1: Thư viện ngoài (react, expo-router, react-native...).
+                 + Nhóm 2: Các component/hooks nội bộ dùng alias (@/, @hooks/, @contexts/...).
+                 + Nhóm 3: Các đường dẫn tương đối (../, ./).
+               - ĐẶC BIỆT: Gom các dòng "Import Name" ({ ... }) nằm chung với nhau và các dòng "Import Default" hoặc "Import *" nằm chung với nhau trong cùng một nhóm để code sạch đẹp.
+
+            2. CÚ PHÁP & TỐI ƯU LUỒNG (Flow & Syntax):
+               - Kiểm tra các luồng bất đồng bộ (async/await), lồng mạch logic phức tạp, hoặc thiếu try/catch dễ crash ứng dụng.
+
+            3. RÒ RỈ BỘ NHỚ (Memory Leaks) & HIỆU NĂNG:
+               - Quét kỹ useEffect, useMemo, useCallback. Bắt buộc phải có Cleanup Function khi đăng ký Event Listener, Subscription, setInterval/setTimeout.
+               - Phát hiện việc thiếu Dependency Array hoặc truyền thừa biến gây re-render vô hạn.
+
+            4. BẢO MẬT (Security) & BEST PRACTICES:
+               - Phát hiện rò rỉ token, API Key hoặc lộ biến môi trường bí mật (lỗi dùng nhầm NEXT_PUBLIC_).
+
+            YÊU CẦU VỀ COMMENT:
+            - Văn phong: Khắt khe, đi thẳng vào vấn đề.
+            - Nội dung: Chỉ rõ dòng code đang gặp lỗi gì, giải thích tại sao nguy hiểm và đưa ra đoạn code sửa mẫu (Refactor code) tối ưu hơn ngay trong comment đó.
+            - Nếu đoạn code không vi phạm lỗi nghiêm trọng nào ở trên, TUYỆT ĐỐI KHÔNG để lại bình luận để tránh làm loãng PR.
+
+          # --- BỘ QUY TẮC CHO /improve (code suggestion ghim vào diff) ---
+          PR_CODE_SUGGESTIONS__EXTRA_INSTRUCTIONS: |
+            Tập trung đề xuất sửa cho: sắp xếp import theo nhóm (thư viện ngoài / alias @/ / đường dẫn tương đối),
+            cleanup function trong useEffect, dependency array đúng, try/catch cho async,
+            và rò rỉ biến môi trường (dùng nhầm NEXT_PUBLIC_). Phản hồi bằng tiếng Việt.
