@@ -3,14 +3,15 @@ name: Check Resolved Conversations
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  # Đảm bảo bắt trọn khoảnh khắc bạn bấm nút Resolve hoặc Unresolve trên giao diện Web
   pull_request_review_comment:
     types: [created, edited, deleted]
-  issue_comment:
-    types: [created, edited, deleted]
-  # Thêm sự kiện này: Khi bất kỳ bên thứ ba nào (như CodeRabbit) hoàn thành lượt review
   pull_request_review:
     types: [submitted]
+  issue_comment:
+    types: [created, edited, deleted]
 
+# Gom tất cả các luồng trùng lặp tránh việc chạy đua (race condition)
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number }}
   cancel-in-progress: true
@@ -18,60 +19,12 @@ concurrency:
 permissions:
   pull-requests: read
   contents: read
-  checks: read
 
 jobs:
   check-comments:
     runs-on: ubuntu-latest
     steps:
-      - name: Check for active unresolved threads
-        uses: actions/github-script@v7
+      - name: Verify All Conversations Are Resolved
+        uses: edisongustavo/unresolved-conversations-action@v1.1.1
         with:
-          script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const pull_number = context.payload.pull_request ? context.payload.pull_request.number : context.issue.number;
-
-            if (!pull_number) return;
-
-            // 1. KIỂM TRA XEM CODERABBIT CÓ ĐANG CHẠY KHÔNG
-            const { data: checks } = await github.rest.checks.listForRef({
-              owner,
-              repo,
-              ref: context.payload.pull_request ? context.payload.pull_request.head.sha : context.sha,
-            });
-
-            const codeRabbitCheck = checks.check_runs.find(run => run.name.toLowerCase().includes('coderabbit'));
-            
-            if (codeRabbitCheck && codeRabbitCheck.status !== 'completed') {
-              core.setFailed("Đợi chút! CodeRabbit vẫn đang tiến hành review code, vui lòng đợi CodeRabbit chạy xong.");
-              return;
-            }
-
-            // 2. KIỂM TRA CÁC COMMENT CHƯA RESOLVE
-            const query = `
-              query($owner: String!, $repo: String!, $pull_number: Int!) {
-                repository(owner: $owner, name: $repo) {
-                  pullRequest(number: $pull_number) {
-                    reviewThreads(first: 100) {
-                      nodes {
-                        isResolved
-                        isOutdated
-                      }
-                    }
-                  }
-                }
-              }
-            `;
-            
-            const result = await github.graphql(query, { owner, repo, pull_number });
-            const threadsList = result.repository.pullRequest.reviewThreads.nodes;
-            
-            // Chỉ bắt các comment chưa xử lý và không phải outdated
-            const activeUnresolvedThreads = threadsList.filter(thread => !thread.isResolved && !thread.isOutdated);
-
-            if (activeUnresolvedThreads.length > 0) {
-              core.setFailed(`Xảy ra lỗi: Vẫn còn ${activeUnresolvedThreads.length} cuộc hội thoại chưa được Resolve!`);
-            } else {
-              console.log("Tuyệt vời! Hệ thống hợp lệ để merge.");
-            }
+          token: ${{ secrets.GITHUB_TOKEN }}
