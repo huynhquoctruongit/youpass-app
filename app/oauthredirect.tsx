@@ -82,6 +82,7 @@ export default function OAuthRedirect() {
   useEffect(() => {
     const getParam: any = params
     loginWithGoogle(getParam.code);
+    
   }, []);
 
   return (
