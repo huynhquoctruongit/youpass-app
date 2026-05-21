@@ -2,11 +2,23 @@ name: Check Resolved Conversations
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    # Thêm hai loại types dưới đây để khi bạn bấm nút Resolve trên web, script sẽ tự chạy lại ngay
+    types: [opened, synchronize, reopened, review_requested]
   pull_request_review:
     types: [submitted]
+  pull_request_review_comment:
+    types: [created, edited, deleted]
+  # Thêm hẳn một event riêng cho việc đóng/mở thread thảo luận
+  discussion: 
+    types: [created, edited]
+  # Đảm bảo bắt được mọi hành động resolve trực tiếp trên giao diện PR
   issue_comment:
     types: [created, edited, deleted]
+
+# Mẹo nhỏ: Thêm quyền để script đọc dữ liệu PR mượt mà hơn
+permissions:
+  pull-requests: read
+  contents: read
 
 jobs:
   check-comments:
