@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/use-auth";
 import * as SecureStore from "expo-secure-store";
 import * as AuthSession from "expo-auth-session";
 
-
 const GOOGLE_TOKEN_DISCOVERY = {
   tokenEndpoint: "https://oauth2.googleapis.com/token",
 };
