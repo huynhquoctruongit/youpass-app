@@ -6,7 +6,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  cancel-in-progress: "true"
 
 permissions:
   contents: read
@@ -22,22 +22,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          OPENAI.API_BASE: "https://openrouter.ai/api/v1"
-          CONFIG.MODEL: "anthropic/claude-3.5-sonnet"
-          
-          # CẤU HÌNH ÉP LÀM MỚI VÀ ĐỔ COMMENT XUỐNG CÁC DÒNG CODE CHANGED
-          PR_REVIEWER.GIVE_REVIEW_COMMENTS: true
-          PR_REVIEWER.INLINE_CODE_COMMENTS: true
-          GITHUB_ACTION_CONFIG.AUTO_REVIEW: true
-          
-          # Bật lại thông báo tóm tắt ở tab ngoài để chúng ta nghiệm thu xem bot đã chạy chưa
-          PR_REVIEWER.ENABLE_INTRO_COMMENT: true 
-          PR_REVIEWER.PERSISTENT_COMMENT: false # Đổi thành false để mỗi lần gõ /review nó sẽ xóa comment cũ và ghi đè cái mới hoàn toàn
-          
-          PR_REVIEWER.LANGUAGE: "Vietnamese"
-          
-          # BỘ QUY TẮC PHÂN TÍCH CHUYÊN SÂU
-          PR_REVIEWER.EXTRA_INSTRUCTIONS: |
+          OPENAI_API_BASE: "https://openrouter.ai/api/v1" 
+          CONFIG__MODEL: "anthropic/claude-3.5-sonnet"    
+
+          GITHUB_ACTION_CONFIG__AUTO_REVIEW: "true"
+          GITHUB_ACTION_CONFIG__AUTO_DESCRIBE: "false"
+          GITHUB_ACTION_CONFIG__AUTO_IMPROVE: "false"
+
+          PR_REVIEWER__INLINE_CODE_COMMENTS: "true"
+          PR_REVIEWER__GIVE_REVIEW_COMMENTS: "true"
+
+          PR_REVIEWER__ENABLE_INTRO_COMMENT: "true"
+          PR_REVIEWER__PERSISTENT_COMMENT: "false"
+          PR_REVIEWER__LANGUAGE: "Vietnamese"
+
+          PR_REVIEWER__EXTRA_INSTRUCTIONS: |
             Bạn là một Chuyên gia Đánh giá Mã nguồn (Principal Engineer / Security Auditor) kỳ cựu chuyên trị Next.js, React, và TypeScript.
             Nhiệm vụ của bạn là duyệt qua các dòng code thay đổi trong PR này và CHỈ tạo bình luận (Inline Comment) trực tiếp vào những dòng vi phạm nghiêm trọng các tiêu chí sau:
 
