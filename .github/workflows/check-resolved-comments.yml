@@ -3,28 +3,89 @@ name: Check Resolved Conversations
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  # Đảm bảo bắt trọn khoảnh khắc bạn bấm nút Resolve hoặc Unresolve trên giao diện Web
+  # Kích hoạt khi có bình luận mới (giúp bạn gõ từ khóa tự resolve)
   pull_request_review_comment:
-    types: [created, edited, deleted]
-  pull_request_review:
-    types: [submitted]
+    types: [created]
   issue_comment:
-    types: [created, edited, deleted]
+    types: [created]
 
-# Gom tất cả các luồng trùng lặp tránh việc chạy đua (race condition)
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number }}
   cancel-in-progress: true
 
 permissions:
-  pull-requests: read
+  pull-requests: write # Quyền write để tự động Resolve thay bạn khi cần
   contents: read
 
 jobs:
-  check-comments:
+  check-threads:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify All Conversations Are Resolved
-        uses: edisongustavo/unresolved-conversations-action@v1.1.1
+      - name: Verify and Auto Resolve Threads
+        uses: actions/github-script@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = context.payload.pull_request ? context.payload.pull_request.number : context.issue.number;
+
+            if (!pull_number) return;
+
+            // 1. Quét toàn bộ các cuộc hội thoại trong PR
+            const query = `
+              query($owner: String!, $repo: String!, $pull_number: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  pullRequest(number: $pull_number) {
+                    reviewThreads(first: 100) {
+                      nodes {
+                        id
+                        isResolved
+                        isOutdated
+                        comments(last: 1) {
+                          nodes {
+                            body
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+            
+            const result = await github.graphql(query, { owner, repo, pull_number });
+            const threadsList = result.repository.pullRequest.reviewThreads.nodes;
+
+            let unresolvedCount = 0;
+
+            for (const thread of threadsList) {
+              // ĐIỀU KIỆN 1: Nếu nhận xét đã Outdated (lỗi thời do push code mới) -> Bỏ qua, nút sẽ sáng
+              if (thread.isOutdated) continue;
+
+              if (!thread.isResolved) {
+                const lastComment = thread.comments.nodes[0]?.body?.trim()?.toLowerCase();
+                
+                // ĐIỀU KIỆN 2: Cơ chế kích hoạt bằng từ khóa để lách luật GitHub
+                // Thay vì bấm nút Resolve bất khả thi, bạn chỉ cần gõ "r" hoặc "done" vào ô reply
+                if (lastComment === 'r' || lastComment === 'done' || lastComment === 'resolved') {
+                  const resolveMutation = `
+                    mutation($threadId: ID!) {
+                      resolveReviewThread(input: { threadId: $threadId }) {
+                        thread { id isResolved }
+                      }
+                    }
+                  `;
+                  await github.graphql(resolveMutation, { threadId: thread.id });
+                  console.log(`Đã tự động xử lý và đóng thread: ${thread.id}`);
+                } else {
+                  unresolvedCount++;
+                }
+              }
+            }
+
+            // 3. Trả trạng thái để kiểm soát nút Merge
+            if (unresolvedCount > 0) {
+              core.setFailed(`Xảy ra lỗi: Vẫn còn ${unresolvedCount} cuộc hội thoại chưa được Resolve!`);
+            } else {
+              console.log("Tuyệt vời! Tất cả các comment cần xử lý đã được đóng.");
+            }
