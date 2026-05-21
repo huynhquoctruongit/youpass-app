@@ -78,7 +78,7 @@ export default function OAuthRedirect() {
     };
 
     run();
-  }, [params, router, loginWithGoogle]);
+  }, []);
 
   return (
     <View style={styles.container}>

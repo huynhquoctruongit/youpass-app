@@ -1,18 +1,26 @@
 language: vi
-early_access: false
 
 reviews:
-  auto_review:
-    enabled: true
-    rules:
-      - performance
-      - clean architecture
-      - memory leak
-      - async bug
-      - typing
-      - security
-      - ngắn gọn bằng tiếng Việt.
-  request_changes_workflow: true
+  profile: "chill"
   high_level_summary: true
   review_status: true
-  poem: false
+  collapse_walkthrough: true
+
+  auto_review:
+    enabled: true
+
+chat:
+  auto_reply: true
+
+tone_instructions: >
+  IMPORTANT:
+  Tất cả review, comment, summary phải dùng tiếng Việt.
+  Review ngắn gọn, dễ hiểu.
+  Ưu tiên:
+  - clean code
+  - React Native best practice
+  - performance
+  - async bug
+  - memory leak
+  - typing
+  - security
