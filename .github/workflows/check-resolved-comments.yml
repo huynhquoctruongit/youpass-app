@@ -3,13 +3,11 @@ name: Check Resolved Conversations
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  # Kích hoạt chạy lại ngay khi bạn bấm nút Resolve hoặc Unresolve trên giao diện Web
   pull_request_review_comment:
     types: [created, edited, deleted]
   issue_comment:
     types: [created, edited, deleted]
 
-# Gom nhóm các luồng chạy trùng nhau để không bao giờ bị kẹt lại check cũ
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number }}
   cancel-in-progress: true
@@ -22,7 +20,7 @@ jobs:
   check-comments:
     runs-on: ubuntu-latest
     steps:
-      - name: Check for unresolved threads
+      - name: Check for active unresolved threads
         uses: actions/github-script@v7
         with:
           script: |
@@ -35,6 +33,7 @@ jobs:
               return;
             }
 
+            // Sử dụng GraphQL để lấy cả trạng thái 'isResolved' và trạng thái 'isOutdated' của từng thread
             const query = `
               query($owner: String!, $repo: String!, $pull_number: Int!) {
                 repository(owner: $owner, name: $repo) {
@@ -42,6 +41,12 @@ jobs:
                     reviewThreads(first: 100) {
                       nodes {
                         isResolved
+                        isOutdated
+                        comments(first: 1) {
+                          nodes {
+                            body
+                          }
+                        }
                       }
                     }
                   }
@@ -53,10 +58,11 @@ jobs:
             const result = await github.graphql(query, variables);
             const threadsList = result.repository.pullRequest.reviewThreads.nodes;
             
-            const unresolvedThreads = threadsList.filter(thread => !thread.isResolved);
+            // ĐIỀU KIỆN MỚI: Chỉ giữ lại những comment CHƯA RESOLVE "VÀ" CHƯA BỊ OUTDATED
+            const activeUnresolvedThreads = threadsList.filter(thread => !thread.isResolved && !thread.isOutdated);
 
-            if (unresolvedThreads.length > 0) {
-              core.setFailed(`Xảy ra lỗi: Vẫn còn ${unresolvedThreads.length} cuộc hội thoại chưa được Resolve!`);
+            if (activeUnresolvedThreads.length > 0) {
+              core.setFailed(`Xảy ra lỗi: Vẫn còn ${activeUnresolvedThreads.length} cuộc hội thoại đang hoạt động chưa được xử lý!`);
             } else {
-              console.log("Tuyệt vời! Tất cả các comment đã được Resolve.");
+              console.log("Tuyệt vời! Tất cả các comment cần xử lý đã được Resolve hoặc đã Outdated.");
             }
