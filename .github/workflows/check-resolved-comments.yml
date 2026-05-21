@@ -1,4 +1,4 @@
-name: Next.js AI Line Reviewer (OpenRouter)
+name: Next.js AI Line Reviewer (OpenRouter Free)
 
 on:
   pull_request:
@@ -20,19 +20,14 @@ jobs:
         uses: Codium-ai/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-          # 1. ĐỔI TÊN BIẾN: pr-agent bắt buộc viết là OPENAI_KEY (bỏ chữ _API đi)
           OPENAI_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENAI.API_BASE: "https://openrouter.ai/api/v1"
           
-          # 2. CHỌN MODEL CHUẨN
-          CONFIG.MODEL: "deepseek/deepseek-chat"
+          # ĐỔI TẠI ĐÂY: Bắt buộc phải có hậu tố :free thì tài khoản 0đ mới chạy được
+          CONFIG.MODEL: "google/gemini-2.5-flash:free"
           
-          # 3. ÉP CHẠY LẠI KHI PUSH CODE MỚI: Mở khóa tính năng chặn "synchronize" ban nãy
           PR_REVIEWER.GIVE_REVIEW_COMMENTS: true
           GITHUB_ACTION_CONFIG.AUTO_REVIEW: true
-          
-          # Cấu hình ngôn ngữ tiếng Việt
           PR_REVIEWER.LANGUAGE: "Vietnamese"
           PR_REVIEWER.EXTRA_INSTRUCTIONS: |
             Bạn là một Chuyên gia Đánh giá Mã nguồn (Senior Developer) về Next.js và React.
