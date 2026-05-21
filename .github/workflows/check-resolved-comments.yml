@@ -2,20 +2,18 @@ name: Check Resolved Conversations
 
 on:
   pull_request:
-    # Thêm hai loại types dưới đây để khi bạn bấm nút Resolve trên web, script sẽ tự chạy lại ngay
-    types: [opened, synchronize, reopened, review_requested]
-  pull_request_review:
-    types: [submitted]
+    types: [opened, synchronize, reopened]
+  # Kích hoạt chạy lại ngay khi bạn bấm nút Resolve hoặc Unresolve trên giao diện Web
   pull_request_review_comment:
     types: [created, edited, deleted]
-  # Thêm hẳn một event riêng cho việc đóng/mở thread thảo luận
-  discussion: 
-    types: [created, edited]
-  # Đảm bảo bắt được mọi hành động resolve trực tiếp trên giao diện PR
   issue_comment:
     types: [created, edited, deleted]
 
-# Mẹo nhỏ: Thêm quyền để script đọc dữ liệu PR mượt mà hơn
+# Gom nhóm các luồng chạy trùng nhau để không bao giờ bị kẹt lại check cũ
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
 permissions:
   pull-requests: read
   contents: read
@@ -37,22 +35,6 @@ jobs:
               return;
             }
 
-            // Gọi API lấy danh sách các cuộc thảo luận (review threads)
-            const { data: threads } = await github.rest.pulls.listReviewComments({
-              owner: owner,
-              repo: repo,
-              pull_number: pull_number,
-            });
-
-            // Lọc ra các comment của hệ thống/CodeRabbit hoặc user chưa được giải quyết
-            // GitHub API trả về vị trí hoặc trạng thái của các thread thảo luận chính
-            const { data: fullPr } = await github.rest.pulls.get({
-              owner: owner,
-              repo: repo,
-              pull_number: pull_number,
-            });
-
-            // Thực hiện truy vấn GraphQL nâng cao để check chính xác trạng thái 'isResolved' của GitHub
             const query = `
               query($owner: String!, $repo: String!, $pull_number: Int!) {
                 repository(owner: $owner, name: $repo) {
@@ -60,11 +42,6 @@ jobs:
                     reviewThreads(first: 100) {
                       nodes {
                         isResolved
-                        comments(first: 1) {
-                          nodes {
-                            body
-                          }
-                        }
                       }
                     }
                   }
@@ -79,7 +56,7 @@ jobs:
             const unresolvedThreads = threadsList.filter(thread => !thread.isResolved);
 
             if (unresolvedThreads.length > 0) {
-              core.setFailed(`Xảy ra lỗi: Vẫn còn ${unresolvedThreads.length} cuộc hội thoại/comment chưa được Resolve! Bạn không được merge.`);
+              core.setFailed(`Xảy ra lỗi: Vẫn còn ${unresolvedThreads.length} cuộc hội thoại chưa được Resolve!`);
             } else {
-              console.log("Tuyệt vời! Tất cả các comment đã được Resolve thành công.");
+              console.log("Tuyệt vời! Tất cả các comment đã được Resolve.");
             }
