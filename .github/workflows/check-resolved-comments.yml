@@ -23,8 +23,11 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENAI.API_BASE: "https://openrouter.ai/api/v1"
           
-          # ĐỔI TẠI ĐÂY: Bắt buộc phải có hậu tố :free thì tài khoản 0đ mới chạy được
+         # Dùng model Free chuẩn
           CONFIG.MODEL: "google/gemini-2.5-flash:free"
+          
+          # CHÍ MẠNG: Ép hạ max_tokens xuống 4000 để lách qua giới hạn 8888 của OpenRouter Free
+          CONFIG.MAX_TOKENS: 4000
           
           PR_REVIEWER.GIVE_REVIEW_COMMENTS: true
           GITHUB_ACTION_CONFIG.AUTO_REVIEW: true
