@@ -1,91 +1,90 @@
-name: Auto Resolve and Check Comments
+name: Next.js CI Check
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
-  # Kích hoạt khi bạn hoặc CodeRabbit gõ bình luận mới
-  pull_request_review_comment:
-    types: [created]
-  issue_comment:
-    types: [created]
+    branches: [ main, master, develop ]
+  push:
+    branches: [ main, master, develop ]
 
+# Gom nhóm để nếu bạn push liên tục, hệ thống sẽ tự hủy lượt chạy cũ để tiết kiệm thời gian
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
-  pull-requests: write # Cần quyền write để script tự bấm Resolve thay bạn
   contents: read
+  pull-requests: write
 
 jobs:
-  check-threads:
+  audit-and-build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Auto Resolve by Keyword and Verify Threads
-        uses: actions/github-script@v7
+      # Bước 1: Tải mã nguồn về máy ảo
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # Bước 2: Tự động nhận diện và cài đặt Package Manager (npm / yarn / pnpm)
+      - name: Detect package manager
+        id: package-manager
+        run: |
+          if [ -f "${{ github.workspace }}/yarn.lock" ]; then
+            echo "manager=yarn" >> $GITHUB_OUTPUT
+            echo "command=install" >> $GITHUB_OUTPUT
+            echo "runner=yarn" >> $GITHUB_OUTPUT
+            exit 0
+          elif [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
+            echo "manager=pnpm" >> $GITHUB_OUTPUT
+            echo "command=install" >> $GITHUB_OUTPUT
+            echo "runner=pnpm" >> $GITHUB_OUTPUT
+            exit 0
+          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
+            echo "manager=npm" >> $GITHUB_OUTPUT
+            echo "command=ci" >> $GITHUB_OUTPUT
+            echo "runner=npm run" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "Không tìm thấy file lock nào. Mặc định dùng npm."
+            echo "manager=npm" >> $GITHUB_OUTPUT
+            echo "command=install" >> $GITHUB_OUTPUT
+            echo "runner=npm run" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+      # Bước 3: Setup Node.js (Khuyên dùng bản LTS v20 cho các dự án Next.js hiện tại)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const pull_number = context.payload.pull_request ? context.payload.pull_request.number : context.issue.number;
+          node-version: 20
+          cache: ${{ steps.package-manager.outputs.manager }}
 
-            if (!pull_number) return;
+      # Bước 4: Thiết lập bộ nhớ đệm (Cache) riêng cho Next.js để tăng tốc độ Build gấp 3 lần
+      - name: Setup Next.js cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/.next/cache
+          # Gắn key cache theo file lock của bạn
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml') }}-
 
-            // 1. LẤY TOÀN BỘ CÁC THREAD THẢO LUẬN QUẢ GRAPHQL
-            const query = `
-              query($owner: String!, $repo: String!, $pull_number: Int!) {
-                repository(owner: $owner, name: $repo) {
-                  pullRequest(number: $pull_number) {
-                    reviewThreads(first: 100) {
-                      nodes {
-                        id
-                        isResolved
-                        isOutdated
-                        comments(last: 1) {
-                          nodes {
-                            body
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            `;
-            
-            const result = await github.graphql(query, { owner, repo, pull_number });
-            const threadsList = result.repository.pullRequest.reviewThreads.nodes;
+      # Bước 4.5: Cài đặt pnpm nếu dự án của bạn dùng pnpm
+      - name: Install pnpm (if needed)
+        if: steps.package-manager.outputs.manager == 'pnpm'
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
 
-            let unresolvedCount = 0;
+      # Bước 5: Cài đặt các thư viện (Dependencies)
+      - name: Install dependencies
+        run: ${{ steps.package-manager.outputs.manager }} ${{ steps.package-manager.outputs.command }}
 
-            // 2. DUYỆT TỪNG THREAD
-            for (const thread of threadsList) {
-              if (thread.isOutdated) continue; // Bỏ qua nếu là Outdated
+      # Bước 6: KIỂM TRA 1 - Chạy Linter (Bắt lỗi cú pháp, import thừa, chuẩn Next.js)
+      - name: Run ESLint Check
+        run: ${{ steps.package-manager.outputs.runner }} lint
 
-              if (!thread.isResolved) {
-                const lastComment = thread.comments.nodes[0]?.body?.trim()?.toLowerCase();
-                
-                // Nếu bạn gõ "r", "done" hoặc "resolved" vào ô reply của thread đó
-                if (lastComment === 'r' || lastComment === 'done' || lastComment === 'resolved') {
-                  // Script sẽ tự gọi API bấm "Resolve conversation" thay cho bạn luôn!
-                  const resolveMutation = `
-                    mutation($threadId: ID!) {
-                      resolveReviewThread(input: { threadId: $threadId }) {
-                        thread { id isResolved }
-                      }
-                    }
-                  `;
-                  await github.graphql(resolveMutation, { threadId: thread.id });
-                  console.log(`Đã tự động Resolve thread: ${thread.id}`);
-                } else {
-                  unresolvedCount++;
-                }
-              }
-            }
-
-            // 3. ĐƯA RA KẾT QUẢ CHO BUTTON MERGE
-            if (unresolvedCount > 0) {
-              core.setFailed(`Xảy ra lỗi: Vẫn còn ${unresolvedCount} cuộc hội thoại chưa xử lý xong.`);
-            } else {
-              console.log("Tất cả ok! Nút merge sẽ sáng lên.");
-            }
+      # Bước 7: KIỂM TRA 2 - Thử nghiệm Build dự án (Bắt lỗi TypeScript, lỗi SSR/SSG compile)
+      # Đây là bước quan trọng nhất vì Next.js thường chỉ lộ lỗi xuất dữ liệu khi chạy lệnh build thực tế
+      - name: Build Next.js Production
+        run: ${{ steps.package-manager.outputs.runner }} build
