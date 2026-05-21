@@ -1,30 +1,27 @@
-name: Check Resolved Conversations
+name: Auto Resolve and Check Comments
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  # Kích hoạt khi bạn hoặc CodeRabbit gõ bình luận mới
   pull_request_review_comment:
     types: [created]
   issue_comment:
     types: [created]
-  # Kích hoạt chạy lại ngay khi CodeRabbit kết thúc lượt review và submit
-  pull_request_review:
-    types: [submitted]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number }}
   cancel-in-progress: true
 
 permissions:
-  pull-requests: write
+  pull-requests: write # Cần quyền write để script tự bấm Resolve thay bạn
   contents: read
-  checks: read
 
 jobs:
   check-threads:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify and Auto Resolve Threads
+      - name: Auto Resolve by Keyword and Verify Threads
         uses: actions/github-script@v7
         with:
           script: |
@@ -34,22 +31,7 @@ jobs:
 
             if (!pull_number) return;
 
-            // 1. KIỂM TRA TRẠNG THÁI CODERABBIT
-            const { data: checks } = await github.rest.checks.listForRef({
-              owner,
-              repo,
-              ref: context.payload.pull_request ? context.payload.pull_request.head.sha : context.sha,
-            });
-
-            const codeRabbitCheck = checks.check_runs.find(run => run.name.toLowerCase().includes('coderabbit'));
-            
-            // Nếu phát hiện CodeRabbit đang "Review in progress" giống trong ảnh, script sẽ chủ động báo lỗi (đỏ) luôn để chặn nút merge lại
-            if (codeRabbitCheck && codeRabbitCheck.status !== 'completed') {
-              core.setFailed("Đợi chút! CodeRabbit đang tiến hành review code, vui lòng đợi hệ thống chạy xong.");
-              return;
-            }
-
-            // 2. NẾU CODERABBIT XONG RỒI -> QUÉT COMMENT NHƯ BÌNH THƯỜNG
+            // 1. LẤY TOÀN BỘ CÁC THREAD THẢO LUẬN QUẢ GRAPHQL
             const query = `
               query($owner: String!, $repo: String!, $pull_number: Int!) {
                 repository(owner: $owner, name: $repo) {
@@ -76,13 +58,16 @@ jobs:
 
             let unresolvedCount = 0;
 
+            // 2. DUYỆT TỪNG THREAD
             for (const thread of threadsList) {
-              if (thread.isOutdated) continue;
+              if (thread.isOutdated) continue; // Bỏ qua nếu là Outdated
 
               if (!thread.isResolved) {
                 const lastComment = thread.comments.nodes[0]?.body?.trim()?.toLowerCase();
                 
+                // Nếu bạn gõ "r", "done" hoặc "resolved" vào ô reply của thread đó
                 if (lastComment === 'r' || lastComment === 'done' || lastComment === 'resolved') {
+                  // Script sẽ tự gọi API bấm "Resolve conversation" thay cho bạn luôn!
                   const resolveMutation = `
                     mutation($threadId: ID!) {
                       resolveReviewThread(input: { threadId: $threadId }) {
@@ -91,14 +76,16 @@ jobs:
                     }
                   `;
                   await github.graphql(resolveMutation, { threadId: thread.id });
+                  console.log(`Đã tự động Resolve thread: ${thread.id}`);
                 } else {
                   unresolvedCount++;
                 }
               }
             }
 
+            // 3. ĐƯA RA KẾT QUẢ CHO BUTTON MERGE
             if (unresolvedCount > 0) {
-              core.setFailed(`Xảy ra lỗi: Vẫn còn ${unresolvedCount} cuộc hội thoại chưa được Resolve!`);
+              core.setFailed(`Xảy ra lỗi: Vẫn còn ${unresolvedCount} cuộc hội thoại chưa xử lý xong.`);
             } else {
-              console.log("Hợp lệ! Tất cả cuộc hội thoại đã được xử lý.");
+              console.log("Tất cả ok! Nút merge sẽ sáng lên.");
             }
