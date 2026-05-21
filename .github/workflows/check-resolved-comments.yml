@@ -2,7 +2,7 @@ name: Next.js AI Line Reviewer (OpenRouter)
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
@@ -13,37 +13,26 @@ permissions:
   pull-requests: write
 
 jobs:
-  review:
+  ai-review:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout mã nguồn
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-
-      - name: AI Code Review từng dòng
-        # Đổi sang tên action chính xác trên GitHub Marketplace
-        uses: fluxninja/openai-pr-reviewer@main
-        with:
-          # Thẻ căn cước tự động của GitHub để post comment
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Code Review từng dòng bằng OpenRouter
+        # Đây là tên Repo chuẩn xác 100% của CodiumAI trên GitHub
+        uses: Codium-ai/pr-agent@main
+        env:
+          # Thẻ tự động của GitHub để AI có quyền tạo hội thoại
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
-          # Key OpenRouter bạn đã lưu trong mục Secrets
-          openai_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+          # Khai báo cấu hình OpenRouter
+          CONFIG.MODEL: "deepseek/deepseek-chat" # Bạn có thể đổi sang anthropic/claude-3.5-sonnet tùy ý
+          OPENAI.API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENAI.API_BASE: "https://openrouter.ai/api/v1"
           
-          # Cổng kết nối bắt buộc của OpenRouter
-          openai_api_base: "https://openrouter.ai/api/v1"
-          
-          # Đổi Model ID theo ý muốn (Ví dụ dùng DeepSeek V3 siêu rẻ)
-          openai_api_model: "deepseek/deepseek-chat"
-          
-          # Ép AI nhận xét bằng tiếng Việt
-          language: "Vietnamese"
-          
-          # Hướng dẫn AI tập trung bắt lỗi Next.js
-          system_message: |
-            Bạn là một AI Senior Developer chuyên nghiệp về Next.js và React.
+          # Ép AI nhận xét chi tiết bằng tiếng Việt vào từng dòng code
+          PR_REVIEWER.REQUIRE_REVIEW_IN_WHITESPACE_LESS_DIFF: false
+          PR_REVIEWER.LANGUAGE: "Vietnamese"
+          PR_REVIEWER.EXTRA_INSTRUCTIONS: |
+            Bạn là một Chuyên gia Đánh giá Mã nguồn (Senior Developer) về Next.js và React.
             Hãy duyệt qua các dòng code thay đổi trong PR này.
             CHỈ tạo comment vào ĐÚNG dòng code nào vi phạm tiêu chuẩn nghiêm trọng (ví dụ: dùng thẻ <img> thay vì <Image> của Next.js, lỗi logic, viết code rườm rà dễ crash).
-            Nếu dòng code đó đã ổn, TUYỆT ĐỐI KHÔNG comment lung tung để tránh làm loãng Pull Request.
+            Nhận xét ngắn gọn, trực diện bằng tiếng Việt.
