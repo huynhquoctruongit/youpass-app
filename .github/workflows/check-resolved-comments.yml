@@ -10,7 +10,8 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write  # Đảm bảo quyền write để bot có quyền điền comment vào code
+  pull-requests: write
+  issues: write
 
 jobs:
   ai-review:
