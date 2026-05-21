@@ -23,42 +23,44 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENAI.API_BASE: "https://openrouter.ai/api/v1"
           
-          # Đảm bảo dùng Claude 3.5 Sonnet để quét sạch logic cấu trúc code
+          # Sử dụng ông vua review code để nhận diện đúng cấu trúc file code
           CONFIG.MODEL: "anthropic/claude-3.5-sonnet"
           
-          PR_REVIEWER.GIVE_REVIEW_COMMENTS: true
-          GITHUB_ACTION_CONFIG.AUTO_REVIEW: true
+          # ==========================================================
+          # 🚨 CẤU HÌNH QUAN TRỌNG: ÉP AI BẮN COMMENT TRỰC TIẾP VÀO FILE
+          # ==========================================================
+          PR_REVIEWER.GIVE_REVIEW_COMMENTS: true        # Bật tính năng nhận xét từng dòng
+          PR_REVIEWER.INLINE_COMMENTS: true             # Ép găm comment vào tab "Files changed"
+          GITHUB_ACTION_CONFIG.AUTO_REVIEW: true        # Tự động quét khi phát hiện PR
+          PR_REVIEWER.PERSISTENT_COMMENT: true          # Giữ lại các nhận xét cũ nếu code chưa sửa
+          PR_REVIEWER.ENABLE_INTRO_COMMENT: false       # Tắt bớt comment chào hỏi dài dòng ở tab ngoài
+          
           PR_REVIEWER.LANGUAGE: "Vietnamese"
           
-          # HỆ THỐNG NÂNG CẤP THÊM TIÊU CHUẨN SẮP XẾP IMPORT SẠCH ĐẸP:
+          # BỘ QUY TẮC PHÂN TÍCH CHUYÊN SÂU
           PR_REVIEWER.EXTRA_INSTRUCTIONS: |
             Bạn là một Chuyên gia Đánh giá Mã nguồn (Principal Engineer / Security Auditor) kỳ cựu chuyên trị Next.js, React, và TypeScript.
-            Nhiệm vụ của bạn là duyệt qua các dòng code thay đổi trong PR này và CHỈ comment vào những dòng vi phạm nghiêm trọng các tiêu chí sau:
+            Nhiệm vụ của bạn là duyệt qua các dòng code thay đổi trong PR này và CHỈ tạo bình luận (Inline Comment) trực tiếp vào những dòng vi phạm nghiêm trọng các tiêu chí sau:
 
             1. TIÊU CHUẨN SẮP XẾP IMPORT ĐẸP CODE (Import Sorting & Cleanliness):
-               - Kiểm tra các khối import đầu file. Bắt lỗi nếu code viết lộn xộn, không gom nhóm rõ ràng.
-               - Yêu cầu cấu trúc nhóm Import chuẩn: 
-                 + Nhóm 1: Thư viện bên ngoài (react, swr, next/image...).
-                 + Nhóm 2: Các component, hooks nội bộ dùng alias (đầu bằng @/, @hooks/, @services/...).
-                 + Nhóm 3: Các thành phần cục bộ bằng đường dẫn tương đối (đầu bằng ../, ./).
-               - ĐẶC BIỆT: Trong cùng một nhóm, hãy ưu tiên gom các dòng "Import Name" ({ ... }) nằm chung với nhau và các dòng "Import Default" nằm chung với nhau, tránh việc viết xen kẽ một dòng dấu ngoặc nhọn rồi đến một dòng không ngoặc nhọn làm mất mỹ quan của code.
+               - Kiểm tra khối import đầu file. Bắt lỗi nếu lộn xộn.
+               - Yêu cầu cấu trúc nhóm Import:
+                 + Nhóm 1: Thư viện ngoài (react, expo-router, react-native...).
+                 + Nhóm 2: Các component/hooks nội bộ dùng alias (@/, @hooks/, @contexts/...).
+                 + Nhóm 3: Các đường dẫn tương đối (../, ./).
+               - ĐẶC BIỆT: Gom các dòng "Import Name" ({ ... }) nằm chung với nhau và các dòng "Import Default" hoặc "Import *" nằm chung với nhau trong cùng một nhóm để code sạch đẹp.
 
             2. CÚ PHÁP & TỐI ƯU LUỒNG (Flow & Syntax):
-               - Kiểm tra việc xử lý bất đồng bộ (async/await), lồng mạch logic rườm rà, hoặc thiếu `try/catch` dẫn đến crash luồng chạy.
-               - Phát hiện việc tối ưu hóa sai luồng Server Component vs Client Component trong Next.js (App Router).
+               - Kiểm tra các luồng bất đồng bộ (async/await), lồng mạch logic phức tạp, hoặc thiếu try/catch dễ crash ứng dụng.
 
             3. RÒ RỈ BỘ NHỚ (Memory Leaks) & HIỆU NĂNG:
-               - Quét kỹ các Hook như `useEffect`, `useMemo`, `useCallback`. Bắt buộc phải có Cleanup Function khi đăng ký Event Listener, `setInterval`/`setTimeout`, hoặc các luồng Subscription.
-               - Phát hiện việc thiếu Dependency Array hoặc truyền thừa/thiếu biến gây re-render vô tận hoặc giữ lại tham chiếu rác trong bộ nhớ.
+               - Quét kỹ useEffect, useMemo, useCallback. Bắt buộc phải có Cleanup Function khi đăng ký Event Listener, Subscription, setInterval/setTimeout.
+               - Phát hiện việc thiếu Dependency Array hoặc truyền thừa biến gây re-render vô hạn.
 
-            4. BẢO MẬT (Security):
-               - Phát hiện rò rỉ thông tin nhạy cảm, Token, API Key hoặc sử dụng biến môi trường sai cách (lộ `NEXT_PUBLIC_` cho các key bí mật).
-               - Kiểm tra các lỗi bảo mật phổ biến: XSS (qua `dangerouslySetInnerHTML`), lỗi lọt dữ liệu khi fetch API, hoặc thiếu validate dữ liệu đầu vào phía Server.
-
-            5. TIÊU CHUẨN NEXT.JS & BEST PRACTICES:
-               - Ép sử dụng các tối ưu tối thiểu: Thẻ `<Image>` của Next.js thay vì `<img>`, `<Link>` thay vì `<a>`, tối ưu font, script.
+            4. BẢO MẬT (Security) & BEST PRACTICES:
+               - Phát hiện rò rỉ token, API Key hoặc lộ biến môi trường bí mật (lỗi dùng nhầm NEXT_PUBLIC_).
 
             YÊU CẦU VỀ COMMENT:
-            - Văn phong: Nghiêm túc, chuyên nghiệp, khắt khe, đi thẳng vào vấn đề.
-            - Nội dung: Chỉ rõ dòng code đang gặp lỗi gì (trong 5 mục trên), giải thích tại sao nó chưa tối ưu và đưa ra đoạn code sửa mẫu (Refactor code đã sắp xếp lại hoặc sửa logic) ngay trong comment.
-            - Nếu đoạn code không vi phạm lỗi nghiêm trọng nào ở trên, TUYỆT ĐỐI KHÔNG để lại bình luận khen ngợi hay nhận xét dạo để tránh làm loãng PR.
+            - Văn phong: Khắt khe, đi thẳng vào vấn đề.
+            - Nội dung: Chỉ rõ dòng code đang gặp lỗi gì, giải thích tại sao nguy hiểm và đưa ra đoạn code sửa mẫu (Refactor code) tối ưu hơn ngay trong comment đó.
+            - Nếu đoạn code không vi phạm lỗi nghiêm trọng nào ở trên, TUYỆT ĐỐI KHÔNG để lại bình luận để tránh làm loãng PR.
