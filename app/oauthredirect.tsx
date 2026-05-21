@@ -77,7 +77,7 @@ export default function OAuthRedirect() {
       }
     };
 
-    run();
+    // run();
   }, []);
 
   return (
