@@ -1,0 +1,73 @@
+name: Check Resolved Conversations
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_review:
+    types: [submitted]
+  issue_comment:
+    types: [created, edited, deleted]
+
+jobs:
+  check-comments:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for unresolved threads
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = context.payload.pull_request ? context.payload.pull_request.number : context.issue.number;
+
+            if (!pull_number) {
+              console.log("Không tìm thấy số Pull Request.");
+              return;
+            }
+
+            // Gọi API lấy danh sách các cuộc thảo luận (review threads)
+            const { data: threads } = await github.rest.pulls.listReviewComments({
+              owner: owner,
+              repo: repo,
+              pull_number: pull_number,
+            });
+
+            // Lọc ra các comment của hệ thống/CodeRabbit hoặc user chưa được giải quyết
+            // GitHub API trả về vị trí hoặc trạng thái của các thread thảo luận chính
+            const { data: fullPr } = await github.rest.pulls.get({
+              owner: owner,
+              repo: repo,
+              pull_number: pull_number,
+            });
+
+            // Thực hiện truy vấn GraphQL nâng cao để check chính xác trạng thái 'isResolved' của GitHub
+            const query = `
+              query($owner: String!, $repo: String!, $pull_number: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  pullRequest(number: $pull_number) {
+                    reviewThreads(first: 100) {
+                      nodes {
+                        isResolved
+                        comments(first: 1) {
+                          nodes {
+                            body
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+            
+            const variables = { owner, repo, pull_number };
+            const result = await github.graphql(query, variables);
+            const threadsList = result.repository.pullRequest.reviewThreads.nodes;
+            
+            const unresolvedThreads = threadsList.filter(thread => !thread.isResolved);
+
+            if (unresolvedThreads.length > 0) {
+              core.setFailed(`Xảy ra lỗi: Vẫn còn ${unresolvedThreads.length} cuộc hội thoại/comment chưa được Resolve! Bạn không được merge.`);
+            } else {
+              console.log("Tuyệt vời! Tất cả các comment đã được Resolve thành công.");
+            }
