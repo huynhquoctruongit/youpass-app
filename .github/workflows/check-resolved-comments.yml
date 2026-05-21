@@ -21,15 +21,12 @@ jobs:
         uses: Codium-ai/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENAI.API_BASE: "https://openrouter.ai/api/v1"
+          CONFIG.MODEL: "anthropic/claude-3.5-sonnet"
 
-          # --- Cấu hình kết nối OpenRouter ---
-          OPENAI__KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          OPENAI__API_BASE: "https://openrouter.ai/api/v1"
-
-          # --- Tên model: đúng chính tả "anthropic", đồng nhất cả 3 chỗ ---
-          CONFIG__MODEL: "openrouter/anthropic/claude-3.5-sonnet"
-          CONFIG__MODEL_TURBO: "openrouter/anthropic/claude-3.5-sonnet"
-          CONFIG__FALLBACK_MODELS: '["openrouter/anthropic/claude-3.5-sonnet"]'
+          CONFIG__MODEL_TURBO: "anthropic/claude-3.5-sonnet"
+          CONFIG__FALLBACK_MODELS: '["anthropic/claude-3.5-sonnet"]'
 
           # --- BẮT BUỘC khi dùng model qua OpenRouter: khai báo context window ---
           CONFIG__CUSTOM_MODEL_MAX_TOKENS: "200000"
