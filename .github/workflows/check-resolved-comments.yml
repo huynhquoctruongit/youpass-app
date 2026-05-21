@@ -18,27 +18,32 @@ jobs:
     steps:
       - name: Checkout mã nguồn
         uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: AI Code Review từng dòng
-        uses: stefanprodan/openai-pr-reviewer@v1
+        # Đổi sang tên action chính xác trên GitHub Marketplace
+        uses: fluxninja/openai-pr-reviewer@main
         with:
-          # Giữ nguyên Token tự động của GitHub để tạo comment
+          # Thẻ căn cước tự động của GitHub để post comment
           github_token: ${{ secrets.GITHUB_TOKEN }}
           
-          # Đổi sang dùng Key OpenRouter bạn vừa tạo ở Bước 1
+          # Key OpenRouter bạn đã lưu trong mục Secrets
           openai_api_key: ${{ secrets.OPENROUTER_API_KEY }}
           
-          # ĐƯỜNG DẪN BẮT BUỘC: Ép script gọi qua cổng OpenRouter thay vì OpenAI mặc định
+          # Cổng kết nối bắt buộc của OpenRouter
           openai_api_base: "https://openrouter.ai/api/v1"
           
-          # CHỌN MODEL: Điền chính xác ID model của OpenRouter tại đây
-          # Ví dụ dưới đây dùng Claude 3.5 Sonnet (mô hình review code đỉnh nhất hiện tại)
-          openai_api_model: "anthropic/claude-3.5-sonnet"
+          # Đổi Model ID theo ý muốn (Ví dụ dùng DeepSeek V3 siêu rẻ)
+          openai_api_model: "deepseek/deepseek-chat"
           
-          # Cấu hình ngôn ngữ và luật cho AI
-          review_comment_language: "Vietnamese"
+          # Ép AI nhận xét bằng tiếng Việt
+          language: "Vietnamese"
+          
+          # Hướng dẫn AI tập trung bắt lỗi Next.js
           system_message: |
-            Bạn là một Chuyên gia Đánh giá Mã nguồn (Senior Code Reviewer) cực kỳ khắt khe về Next.js và React.
+            Bạn là một AI Senior Developer chuyên nghiệp về Next.js và React.
             Hãy duyệt qua các dòng code thay đổi trong PR này.
             CHỈ tạo comment vào ĐÚNG dòng code nào vi phạm tiêu chuẩn nghiêm trọng (ví dụ: dùng thẻ <img> thay vì <Image> của Next.js, lỗi logic, viết code rườm rà dễ crash).
             Nếu dòng code đó đã ổn, TUYỆT ĐỐI KHÔNG comment lung tung để tránh làm loãng Pull Request.
