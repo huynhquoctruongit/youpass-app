@@ -1,10 +1,11 @@
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
-import * as AuthSession from "expo-auth-session";
 import { Platform } from "react-native";
 import { useAuth } from "@/hooks/use-auth";
+import * as SecureStore from "expo-secure-store";
+import * as AuthSession from "expo-auth-session";
+
 
 const GOOGLE_TOKEN_DISCOVERY = {
   tokenEndpoint: "https://oauth2.googleapis.com/token",
@@ -77,8 +78,8 @@ export default function OAuthRedirect() {
       }
     };
 
-    // run();
-  }, []);
+    run();
+  }, [params, router, loginWithGoogle]);
 
   return (
     <View style={styles.container}>
