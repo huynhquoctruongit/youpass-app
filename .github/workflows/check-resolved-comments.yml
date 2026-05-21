@@ -17,19 +17,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Code Review từng dòng bằng OpenRouter
-        # Đây là tên Repo chuẩn xác 100% của CodiumAI trên GitHub
         uses: Codium-ai/pr-agent@main
         env:
-          # Thẻ tự động của GitHub để AI có quyền tạo hội thoại
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
-          # Khai báo cấu hình OpenRouter
-          CONFIG.MODEL: "deepseek/deepseek-chat" # Bạn có thể đổi sang anthropic/claude-3.5-sonnet tùy ý
-          OPENAI.API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # 1. ĐỔI TÊN BIẾN: pr-agent bắt buộc viết là OPENAI_KEY (bỏ chữ _API đi)
+          OPENAI_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENAI.API_BASE: "https://openrouter.ai/api/v1"
           
-          # Ép AI nhận xét chi tiết bằng tiếng Việt vào từng dòng code
-          PR_REVIEWER.REQUIRE_REVIEW_IN_WHITESPACE_LESS_DIFF: false
+          # 2. CHỌN MODEL CHUẨN
+          CONFIG.MODEL: "deepseek/deepseek-chat"
+          
+          # 3. ÉP CHẠY LẠI KHI PUSH CODE MỚI: Mở khóa tính năng chặn "synchronize" ban nãy
+          PR_REVIEWER.GIVE_REVIEW_COMMENTS: true
+          GITHUB_ACTION_CONFIG.AUTO_REVIEW: true
+          
+          # Cấu hình ngôn ngữ tiếng Việt
           PR_REVIEWER.LANGUAGE: "Vietnamese"
           PR_REVIEWER.EXTRA_INSTRUCTIONS: |
             Bạn là một Chuyên gia Đánh giá Mã nguồn (Senior Developer) về Next.js và React.
