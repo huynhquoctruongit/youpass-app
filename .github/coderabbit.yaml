@@ -1,0 +1,18 @@
+language: vi
+early_access: false
+
+reviews:
+  auto_review:
+    enabled: true
+    rules:
+      - performance
+      - clean architecture
+      - memory leak
+      - async bug
+      - typing
+      - security
+      - ngắn gọn bằng tiếng Việt.
+  request_changes_workflow: true
+  high_level_summary: true
+  review_status: true
+  poem: false
