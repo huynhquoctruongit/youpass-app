@@ -54,8 +54,11 @@ export function StudyDrawerContent(props: DrawerContentComponentProps) {
                     ) : planDetail ? (
                         <RoadmapCard
                             activeWeek={activeWeek}
+                            onSelectWeek={(week) => {
+                                selectWeek(week);
+                                closeDrawer();
+                            }}
                             planDetail={planDetail}
-                            selectWeek={selectWeek}
                         />
                     ) : (
                         <Text className="text-sm text-neutral-500">
@@ -71,8 +74,10 @@ export function StudyDrawerContent(props: DrawerContentComponentProps) {
 
 
 
-const RoadmapCard = ({ activeWeek, planDetail, selectWeek }: {
-    activeWeek: StudentStudyWeek | null; planDetail: StudyPlanDetail; selectWeek: (week: StudentStudyWeek) => void;
+const RoadmapCard = ({ activeWeek, onSelectWeek, planDetail }: {
+    activeWeek: StudentStudyWeek | null;
+    onSelectWeek: (week: StudentStudyWeek) => void;
+    planDetail: StudyPlanDetail;
 }) => {
     const weeks = planDetail.student_study_weeks ?? [];
     const maxItems = Math.max(1, ...weeks.map((week) => week.total_study_items ?? 0));
@@ -96,7 +101,7 @@ const RoadmapCard = ({ activeWeek, planDetail, selectWeek }: {
                     return (
                         <Pressable
                             key={week.id}
-                            onPress={() => selectWeek(week)}
+                            onPress={() => onSelectWeek(week)}
                             className={`w-14 items-center rounded-xl border px-2 py-3 ${isActive ? "border-orange-500 bg-orange-50" : "border-neutral-200 bg-white"
                                 }`}
                         >

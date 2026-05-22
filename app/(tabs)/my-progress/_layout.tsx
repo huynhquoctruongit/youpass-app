@@ -1,11 +1,13 @@
 import { Drawer } from "expo-router/drawer";
 import { Dimensions } from "react-native";
 import { StudyDrawerContent } from "@/components/study/drawer-menu";
+import { StudyProgressProvider } from "@/contexts/study-progress-context";
 
 const DRAWER_WIDTH = Dimensions.get("window").width;
 
 export default function MyProgressDrawerLayout() {
   return (
+    <StudyProgressProvider>
     <Drawer
       drawerContent={(props) => <StudyDrawerContent {...props} />}
       screenOptions={{
@@ -25,5 +27,6 @@ export default function MyProgressDrawerLayout() {
         }}
       />
     </Drawer>
+    </StudyProgressProvider>
   );
 }

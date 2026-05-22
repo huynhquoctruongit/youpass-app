@@ -8,13 +8,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { useStudyProgress } from "@/hooks/use-study-plan";
 import { studyApi } from "@/services/api/study";
 import {
-  buildStudyItemUrl, buildWeekRows, CHALLENGES_OPTIONS, convertMinsToHrsMins, countItemsBySkill, DEFAULT_WEEK_REFLECTION_DATA, findPreviousStudyWeek, findStudyWeekForToday, formatDate, formatDateTime, getBandScore, isDateBetween, isFutureDate, ITEM_TYPE_LABELS, MOOD_OPTIONS, toDateKey,
+  buildStudyItemUrl, buildWeekRows, CHALLENGES_OPTIONS, convertMinsToHrsMins, countItemsBySkill, DEFAULT_WEEK_REFLECTION_DATA, findPreviousStudyWeek, findStudyWeekForToday, formatDate, formatDateTime, getBandScore, isDateBetween, isFutureDate, ITEM_TYPE_LABELS, MOOD_OPTIONS, shouldOpenLessonDetailScreen, toDateKey,
 } from "@/services/helpers/study";
 import { getFullName } from "@/services/helpers/user";
 import type { StudentStudyItem, StudentStudyWeek, StudyClassMeta, StudyPlan, StudyPlanDetail, StudyWeekDetail, WeekReflectionFormData, } from "@/types/study";
 import { Button as ButtonSystem } from "@/components/ui/button-system";
 import { Colors } from "@/services/constant";
 import { DrawerActions, useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import { navigateToLessonDetail } from "@/services/helpers/lesson-navigation";
 type MaterialIconName = ComponentProps<typeof MaterialIcons>["name"];
 
 export function MyProgressScreen() {
@@ -299,6 +301,7 @@ function WeekDashboard({
           onChanged={refreshWeek}
           title="Chưa hoàn thành"
           tasks={unfinished}
+          weekNumber={week.week_number}
         />
       ) : null}
 
@@ -310,6 +313,7 @@ function WeekDashboard({
           onChanged={refreshWeek}
           title="Đã hoàn thành"
           tasks={finished}
+          weekNumber={week.week_number}
         />
       ) : null}
 
@@ -468,6 +472,7 @@ function NextLessonCard({
         onChanged={async () => undefined}
         task={lesson}
         variant="highlight"
+        weekNumber={week.week_number}
       />
     </Card>
   );
@@ -480,6 +485,7 @@ function TaskSection({
   onChanged,
   tasks,
   title,
+  weekNumber,
 }: {
   classMeta?: StudyClassMeta;
   isCurrentWeek: boolean;
@@ -487,6 +493,7 @@ function TaskSection({
   onChanged: () => Promise<void>;
   tasks: StudentStudyItem[];
   title: string;
+  weekNumber?: number;
 }) {
   return (
     <View className="gap-3">
@@ -502,6 +509,7 @@ function TaskSection({
             isFutureWeek={isFutureWeek}
             onChanged={onChanged}
             task={task}
+            weekNumber={weekNumber}
           />
         ))}
       </View>
@@ -516,6 +524,7 @@ function TaskCard({
   onChanged,
   task,
   variant = "default",
+  weekNumber,
 }: {
   classMeta?: StudyClassMeta;
   isCurrentWeek: boolean;
@@ -523,7 +532,9 @@ function TaskCard({
   onChanged: () => Promise<void>;
   task: StudentStudyItem;
   variant?: "default" | "highlight";
+  weekNumber?: number;
 }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const startTimeRef = useRef(Date.now());
   const studyItem = task.study_item;
@@ -537,11 +548,16 @@ function TaskCard({
   const answerSummary = answer?.summary;
   const waitingReview = !score && [3, 4].includes(studyItem?.type ?? 0) && ["homework", "quiz"].includes(studyItem?.item_type ?? "");
 
-  const openLesson = async () => {
+  const openLesson = () => {
     if (isDisabled || isPastUnavailable) return;
+    if (shouldOpenLessonDetailScreen(studyItem?.item_type)) {
+      navigateToLessonDetail(router, task, classMeta, weekNumber);
+      return;
+    }
+    if (isDone) return;
     const url = buildStudyItemUrl(task, classMeta, isDone);
     if (!url) return;
-    await Linking.openURL(url);
+    void Linking.openURL(url);
   };
 
   const completeVocab = async () => {
