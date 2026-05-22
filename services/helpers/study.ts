@@ -43,6 +43,13 @@ export const ITEM_TYPE_LABELS: Record<string, string> = {
   lesson: "Bài học",
 };
 
+export const IN_APP_LESSON_ITEM_TYPES = ["document", "video"] as const;
+
+export const shouldOpenLessonDetailScreen = (itemType?: string) =>
+  IN_APP_LESSON_ITEM_TYPES.includes(
+    (itemType ?? "").toLowerCase() as (typeof IN_APP_LESSON_ITEM_TYPES)[number],
+  );
+
 export const SKILL_TYPE_LABELS: Record<number, string> = {
   1: "Reading",
   2: "Listening",

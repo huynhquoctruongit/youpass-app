@@ -12,6 +12,7 @@ export type LessonDetailParams = {
   sectionId: string;
   isDone: string;
   answerId: string;
+  weekNumber: string;
 };
 
 export function studentStudyItemFromLessonParams(
@@ -43,6 +44,7 @@ export function classMetaFromLessonParams(params: LessonDetailParams): StudyClas
 export function buildLessonDetailParams(
   task: StudentStudyItem,
   classMeta?: StudyClassMeta,
+  weekNumber?: number,
 ): LessonDetailParams | null {
   const studyItem = task.study_item;
   if (!studyItem?.content_ref_id || !task.id) return null;
@@ -58,6 +60,7 @@ export function buildLessonDetailParams(
     sectionId: classMeta?.section_id != null ? String(classMeta.section_id) : "",
     isDone: task.status === "completed" ? "1" : "0",
     answerId: task.answer_data?.[0]?.id != null ? String(task.answer_data[0].id) : "",
+    weekNumber: weekNumber != null ? String(weekNumber) : "",
   };
 }
 
@@ -65,8 +68,9 @@ export function navigateToLessonDetail(
   router: Router,
   task: StudentStudyItem,
   classMeta?: StudyClassMeta,
+  weekNumber?: number,
 ): boolean {
-  const params = buildLessonDetailParams(task, classMeta);
+  const params = buildLessonDetailParams(task, classMeta, weekNumber);
   if (!params) return false;
 
   router.push({
