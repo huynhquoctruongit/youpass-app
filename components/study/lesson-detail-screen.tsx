@@ -5,7 +5,6 @@ import type { ComponentProps } from "react";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { WebView } from "react-native-webview";
 import { Button as ButtonSystem } from "@/components/ui/button-system";
 import { studyApi } from "@/services/api/study";
 import { Colors } from "@/services/constant";
@@ -120,20 +119,21 @@ export function LessonDetailScreen({ params, onCompleted }: LessonDetailScreenPr
                 <ActivityIndicator color={Colors.primary["01"]} size="large" />
               </View>
             ) : (
-              <WebView
-                key={`${task.id}-${url}`}
-                source={{
-                  uri: url,
-                  headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
-                }}
-                startInLoadingState
-                renderLoading={() => (
-                  <View className="absolute inset-0 items-center justify-center bg-white">
-                    <ActivityIndicator color={Colors.primary["01"]} size="large" />
-                  </View>
-                )}
-                className="flex-1"
-              />
+              // <WebView
+              //   key={`${task.id}-${url}`}
+              //   source={{
+              //     uri: url,
+              //     headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
+              //   }}
+              //   startInLoadingState
+              //   renderLoading={() => (
+              //     <View className="absolute inset-0 items-center justify-center bg-white">
+              //       <ActivityIndicator color={Colors.primary["01"]} size="large" />
+              //     </View>
+              //   )}
+              //   className="flex-1"
+              // />
+              ""
             )}
           </View>
         </View>
