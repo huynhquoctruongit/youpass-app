@@ -8,12 +8,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { useStudyProgress } from "@/hooks/use-study-plan";
 import { studyApi } from "@/services/api/study";
 import {
-  buildStudyItemUrl, buildWeekRows, CHALLENGES_OPTIONS, convertMinsToHrsMins, countItemsBySkill, DEFAULT_WEEK_REFLECTION_DATA, findPreviousStudyWeek, findStudyWeekForToday, formatDate, formatDateTime, getBandScore, isDateBetween, isFutureDate, ITEM_TYPE_LABELS, MOOD_OPTIONS, toDateKey,
+  buildStudyItemUrl, buildWeekRows, CHALLENGES_OPTIONS, convertMinsToHrsMins, countItemsBySkill, DEFAULT_WEEK_REFLECTION_DATA, findPreviousStudyWeek, findStudyWeekForToday, formatDate, formatDateTime, getBandScore, isDateBetween, isFutureDate, ITEM_TYPE_LABELS, MOOD_OPTIONS, shouldOpenLessonDetailScreen, toDateKey,
 } from "@/services/helpers/study";
 import { getFullName } from "@/services/helpers/user";
 import type { StudentStudyItem, StudentStudyWeek, StudyClassMeta, StudyPlan, StudyPlanDetail, StudyWeekDetail, WeekReflectionFormData, } from "@/types/study";
 import { Button as ButtonSystem } from "@/components/ui/button-system";
-
+import { Colors } from "@/services/constant";
+import { DrawerActions, useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import { navigateToLessonDetail } from "@/services/helpers/lesson-navigation";
 type MaterialIconName = ComponentProps<typeof MaterialIcons>["name"];
 
 export function MyProgressScreen() {
@@ -78,11 +81,11 @@ export function MyProgressScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Header fullName={getFullName(profile)} />
-        <RoadmapCard
+        {/* <RoadmapCard
           activeWeek={activeWeek}
           planDetail={planDetail}
           selectWeek={selectWeek}
-        />
+        /> */}
         <WeekDashboard
           activeWeek={activeWeek}
           classMeta={planActive.class_meta}
@@ -100,10 +103,18 @@ export function MyProgressScreen() {
 }
 
 function Header({ fullName }: { fullName: string }) {
+  const navigation = useNavigation();
+
+  const openDrawer = () => {
+    navigation.dispatch(DrawerActions.openDrawer());
+  };
+
   return (
-    <View className="px-1">
-      <Text className="text-t4-regular text-neutral-500">Study plan của tôi</Text>
-      <Text className="mt-1 text-2xl font-bold text-neutral-900">
+    <View className="px-1 flex flex-row gap-2 items-center">
+      <Pressable className="pt-0.5" onPress={openDrawer} accessibilityLabel="Mở menu">
+        <MaterialIcons name="menu" size={24} color={Colors.dark["50"]} />
+      </Pressable>
+      <Text className="mt-1 text-t3-bold text-dark-75">
         Chào mừng <Text className="text-primary-01">{fullName}</Text>
       </Text>
     </View>
@@ -290,6 +301,7 @@ function WeekDashboard({
           onChanged={refreshWeek}
           title="Chưa hoàn thành"
           tasks={unfinished}
+          weekNumber={week.week_number}
         />
       ) : null}
 
@@ -301,6 +313,7 @@ function WeekDashboard({
           onChanged={refreshWeek}
           title="Đã hoàn thành"
           tasks={finished}
+          weekNumber={week.week_number}
         />
       ) : null}
 
@@ -459,6 +472,7 @@ function NextLessonCard({
         onChanged={async () => undefined}
         task={lesson}
         variant="highlight"
+        weekNumber={week.week_number}
       />
     </Card>
   );
@@ -471,6 +485,7 @@ function TaskSection({
   onChanged,
   tasks,
   title,
+  weekNumber,
 }: {
   classMeta?: StudyClassMeta;
   isCurrentWeek: boolean;
@@ -478,6 +493,7 @@ function TaskSection({
   onChanged: () => Promise<void>;
   tasks: StudentStudyItem[];
   title: string;
+  weekNumber?: number;
 }) {
   return (
     <View className="gap-3">
@@ -493,6 +509,7 @@ function TaskSection({
             isFutureWeek={isFutureWeek}
             onChanged={onChanged}
             task={task}
+            weekNumber={weekNumber}
           />
         ))}
       </View>
@@ -507,6 +524,7 @@ function TaskCard({
   onChanged,
   task,
   variant = "default",
+  weekNumber,
 }: {
   classMeta?: StudyClassMeta;
   isCurrentWeek: boolean;
@@ -514,7 +532,9 @@ function TaskCard({
   onChanged: () => Promise<void>;
   task: StudentStudyItem;
   variant?: "default" | "highlight";
+  weekNumber?: number;
 }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const startTimeRef = useRef(Date.now());
   const studyItem = task.study_item;
@@ -528,11 +548,16 @@ function TaskCard({
   const answerSummary = answer?.summary;
   const waitingReview = !score && [3, 4].includes(studyItem?.type ?? 0) && ["homework", "quiz"].includes(studyItem?.item_type ?? "");
 
-  const openLesson = async () => {
+  const openLesson = () => {
     if (isDisabled || isPastUnavailable) return;
+    if (shouldOpenLessonDetailScreen(studyItem?.item_type)) {
+      navigateToLessonDetail(router, task, classMeta, weekNumber);
+      return;
+    }
+    if (isDone) return;
     const url = buildStudyItemUrl(task, classMeta, isDone);
     if (!url) return;
-    await Linking.openURL(url);
+    void Linking.openURL(url);
   };
 
   const completeVocab = async () => {
@@ -698,9 +723,9 @@ function ReflectionModal({
             </View>
           </ScrollView>
 
-          <View className="mt-5 flex-row gap-3">
-            <ButtonSystem variant="secondary-default" size="lg" onPress={onClose} className="">Hủy bỏ</ButtonSystem>
-            <ButtonSystem variant="primary-default" size="lg" onPress={save} className="">Lưu thay đổi</ButtonSystem>
+          <View className="mt-5 flex-row gap-3 ">
+            <ButtonSystem variant="secondary-default" size="xs" onPress={onClose} className="ml-auto">Hủy bỏ</ButtonSystem>
+            <ButtonSystem variant="primary-default" size="xs" onPress={save} className="">Lưu thay đổi</ButtonSystem>
           </View>
         </View>
       </View>
