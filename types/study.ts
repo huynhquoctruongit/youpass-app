@@ -92,3 +92,20 @@ export type StudyWeekDetail = StudentStudyWeek & {
   student_study_reflection?: WeekReflectionFormData | null;
   active_learning_weekdays?: string[];
 };
+
+export type LessonVideoType = "youtube" | "vimeo" | "wistia" | "spotlightr" | string;
+
+export type LessonContentBlock = {
+  content_type?: string;
+  value?: string;
+};
+
+export type LessonDetail = {
+  id?: string | number;
+  title?: string;
+  type?: number;
+  video?: string;
+  video_type?: LessonVideoType;
+  content?: string;
+  content_blocks?: LessonContentBlock[];
+};

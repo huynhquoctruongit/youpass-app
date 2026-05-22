@@ -1,4 +1,6 @@
 import type {
+  LessonDetail,
+  LessonVideoType,
   StudentStudyItem,
   StudentStudyWeek,
   StudyClassMeta,
@@ -180,6 +182,36 @@ export const countItemsBySkill = (items?: StudentStudyItem[] | null) => {
     if (item.status === "completed") result[key].done += 1;
   });
   return result;
+};
+
+export const LESSON_TYPE_LABELS: Record<number, string> = {
+  1: "Tài liệu",
+  2: "Video",
+  3: "Video",
+  4: "Tài liệu",
+};
+
+export const getLessonTypeLabel = (lessonType?: number, itemType?: string) => {
+  if (lessonType && LESSON_TYPE_LABELS[lessonType]) return LESSON_TYPE_LABELS[lessonType];
+  if (itemType && ITEM_TYPE_LABELS[itemType]) return ITEM_TYPE_LABELS[itemType];
+  return "Bài học";
+};
+
+export const detectVideoType = (video?: string, videoType?: LessonVideoType): LessonVideoType => {
+  if (video?.includes("youtube") || video?.includes("youtu.be")) return "youtube";
+  return videoType || "wistia";
+};
+
+export const findLessonPdfUrl = (detail?: LessonDetail | null) => {
+  if (!detail?.content_blocks?.length) return undefined;
+  return detail.content_blocks.find((block) => block?.content_type === "pdf")?.value;
+};
+
+export const extractYoutubeId = (url?: string) => {
+  if (!url) return undefined;
+  const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2]?.length === 11 ? match[2] : undefined;
 };
 
 export const buildStudyItemUrl = (
