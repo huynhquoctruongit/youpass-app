@@ -28,7 +28,10 @@
       "Bash(curl -s http://localhost:8081/status)",
       "Bash(jobs)",
       "Bash(sudo chown -R mac /Users/mac/Documents/Source/Youpass/youpass-app/yp/android)",
-      "WebFetch(domain:expo.dev)"
+      "WebFetch(domain:expo.dev)",
+      "Bash(eas project:info)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
