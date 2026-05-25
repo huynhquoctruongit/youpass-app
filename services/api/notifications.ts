@@ -1,21 +1,21 @@
-import AxiosAPI from "./axios-client";
+import NotifyAPI from "./notify-axios-client";
 
 export type DevicePlatform = "ios" | "android" | "web";
 
 export interface RegisterDeviceTokenPayload {
+  user_id: string;
   token: string;
   platform: DevicePlatform;
-  device_id?: string;
 }
 
 export const notificationsApi = {
   registerDeviceToken: async (payload: RegisterDeviceTokenPayload) => {
-    const res = await AxiosAPI.post("/v1/users/me/devices", payload);
+    const res = await NotifyAPI.post("/v1/devices", payload);
     return res.data?.data;
   },
 
   unregisterDeviceToken: async (token: string) => {
-    const res = await AxiosAPI.delete(`/v1/users/me/devices/${encodeURIComponent(token)}`);
+    const res = await NotifyAPI.delete(`/v1/devices/${encodeURIComponent(token)}`);
     return res.data?.data;
   },
 };
