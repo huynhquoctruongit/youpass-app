@@ -3,7 +3,6 @@ import NotifyAPI from "./notify-axios-client";
 export type DevicePlatform = "ios" | "android" | "web";
 
 export interface RegisterDeviceTokenPayload {
-  user_id: string;
   token: string;
   platform: DevicePlatform;
 }

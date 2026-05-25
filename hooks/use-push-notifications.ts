@@ -33,11 +33,11 @@ export const usePushNotifications = ({
   onForeground = defaultForegroundHandler,
   onOpened,
 }: UsePushNotificationsOptions = {}) => {
-  const { isLogin, profile } = useAuth();
+  const { isLogin } = useAuth();
   const registeredTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isLogin || !profile?.id) return;
+    if (!isLogin) return;
 
     let isMounted = true;
 
@@ -51,7 +51,6 @@ export const usePushNotifications = ({
 
       try {
         await notificationsApi.registerDeviceToken({
-          user_id: profile.id,
           token,
           platform: getDevicePlatform(),
         });
@@ -64,11 +63,9 @@ export const usePushNotifications = ({
     register();
 
     const unsubscribeRefresh = onTokenRefresh(async (token) => {
-      if (!profile?.id) return;
       if (registeredTokenRef.current === token) return;
       try {
         await notificationsApi.registerDeviceToken({
-          user_id: profile.id,
           token,
           platform: getDevicePlatform(),
         });
@@ -82,7 +79,7 @@ export const usePushNotifications = ({
       isMounted = false;
       unsubscribeRefresh();
     };
-  }, [isLogin, profile?.id]);
+  }, [isLogin]);
 
   useEffect(() => {
     const unsubscribeForeground = onForegroundMessage((message) => {
