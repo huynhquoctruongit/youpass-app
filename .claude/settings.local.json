@@ -33,7 +33,12 @@
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
       "Bash(curl -s \"https://api.youpass.vn/items/lesson\" -o /dev/null -w \"%{http_code}\")",
-      "Bash(curl -s \"https://api-stg.youpass.vn/items/lesson\" -o /dev/null -w \"%{http_code}\")"
+      "Bash(curl -s \"https://api-stg.youpass.vn/items/lesson\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -v -X POST https://youpass-notification.onrender.com/v1/notifications/broadcast -H 'Content-Type: application/json' -H 'x-api-key: d1d2aaa54172d20da8e459a342de52e7da0318b5b41e7d72' -d '{\"title\":\"Test\",\"body\":\"Hello\"}')",
+      "Bash(curl -s https://youpass-notification.onrender.com/v1/devices -H 'x-api-key: d1d2aaa54172d20da8e459a342de52e7da0318b5b41e7d72')",
+      "Bash(curl -s https://youpass-notification.onrender.com/health)",
+      "Bash(curl -s -X POST https://youpass-notification.onrender.com/v1/devices -H 'Content-Type: application/json' -H 'x-api-key: d1d2aaa54172d20da8e459a342de52e7da0318b5b41e7d72' -d '{\"token\":\"cZOWG-bRTmqfqr2QgYZBrP:APA91bHsMdg_oV544FkPDhbnA30b4s5B06q60kFLUE9uxto0cBGP6axP_OgyY9rpGcmvBCs4yzOQwi3Z4dyVjdf5J-0vyqSu1feXoFeD9ysOuJit1hI8iZU\",\"platform\":\"android\"}')",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }
