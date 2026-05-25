@@ -31,7 +31,9 @@
       "WebFetch(domain:expo.dev)",
       "Bash(eas project:info)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(curl -s \"https://api.youpass.vn/items/lesson\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s \"https://api-stg.youpass.vn/items/lesson\" -o /dev/null -w \"%{http_code}\")"
     ]
   }
 }
