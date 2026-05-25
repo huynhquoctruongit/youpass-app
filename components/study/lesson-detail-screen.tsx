@@ -156,7 +156,7 @@ export function LessonDetailScreen({ params, onCompleted }: LessonDetailScreenPr
         {canMarkComplete ? (
           <View className="border-t border-neutral-06 bg-white px-4 py-4">
             <ButtonSystem
-              className="self-end"
+              className="self-center"
               icon={
                 <MaterialIcons
                   name="check-circle-outline"
@@ -174,7 +174,7 @@ export function LessonDetailScreen({ params, onCompleted }: LessonDetailScreenPr
           </View>
         ) : isDone ? (
           <View className="border-t border-neutral-06 bg-white px-4 py-4">
-            <View className="flex-row items-center justify-end gap-2">
+            <View className="flex-row items-center justify-center gap-2">
               <MaterialIcons name="check-circle" size={18} color={Colors.secondary["01"]} />
               <Text className="text-t3-bold text-secondary-01">Đã hoàn thành</Text>
             </View>

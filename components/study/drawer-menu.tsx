@@ -10,8 +10,10 @@ import { ScrollView } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { isDateBetween } from "@/services/helpers/study";
 import { getBandScore, convertMinsToHrsMins, formatDate } from "@/services/helpers/study";
-import { ReactNode } from "react";
+import { ReactNode, useRef } from "react";
 import { Colors } from "@/services/constant";
+
+const ITEM_WIDTH = 64; // w-14 (56px) + gap (8px)
 
 const ZALO_INTENSIVE_URL = "https://zalo.me/g/wyf8sb3smujzzxrqwsqc";
 
@@ -81,17 +83,63 @@ const RoadmapCard = ({ activeWeek, onSelectWeek, planDetail }: {
 }) => {
     const weeks = planDetail.student_study_weeks ?? [];
     const maxItems = Math.max(1, ...weeks.map((week) => week.total_study_items ?? 0));
+    const scrollRef = useRef<ScrollView>(null);
+
+    const activeIndex = weeks.findIndex((w) => w.id === activeWeek?.id);
+
+    const scrollToIndex = (index: number) => {
+        scrollRef.current?.scrollTo({ x: index * ITEM_WIDTH, animated: true });
+    };
+
+    const goToPrev = () => {
+        const prevIndex = activeIndex - 1;
+        if (prevIndex < 0) return;
+        onSelectWeek(weeks[prevIndex]);
+        scrollToIndex(Math.max(0, prevIndex - 1));
+    };
+
+    const goToNext = () => {
+        const nextIndex = activeIndex + 1;
+        if (nextIndex >= weeks.length) return;
+        onSelectWeek(weeks[nextIndex]);
+        scrollToIndex(nextIndex);
+    };
+
+    const canPrev = activeIndex > 0;
+    const canNext = activeIndex < weeks.length - 1;
+
     return (
         <Card>
-            <View className="flex-row items-center justify-center">
+            <View className="flex-row items-center justify-between">
                 <View className="rounded-full bg-orange-50 px-3 py-1">
                     <Text className="text-xs font-semibold text-orange-600">
                         Streak {planDetail.streak_weeks?.current ?? 0} tuần
                     </Text>
                 </View>
+                <View className="flex-row items-center gap-1">
+                    <Pressable
+                        onPress={goToPrev}
+                        disabled={!canPrev}
+                        hitSlop={8}
+                        className={`h-7 w-7 items-center justify-center rounded-full ${canPrev ? "bg-orange-100" : "bg-neutral-100"}`}
+                    >
+                        <MaterialIcons name="chevron-left" size={18} color={canPrev ? "#f97316" : "#d1d5db"} />
+                    </Pressable>
+                    <Text className="min-w-[48px] text-center text-xs font-semibold text-neutral-500">
+                        Tuần {activeIndex >= 0 ? activeIndex + 1 : "--"}/{weeks.length}
+                    </Text>
+                    <Pressable
+                        onPress={goToNext}
+                        disabled={!canNext}
+                        hitSlop={8}
+                        className={`h-7 w-7 items-center justify-center rounded-full ${canNext ? "bg-orange-100" : "bg-neutral-100"}`}
+                    >
+                        <MaterialIcons name="chevron-right" size={18} color={canNext ? "#f97316" : "#d1d5db"} />
+                    </Pressable>
+                </View>
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            <ScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
                 {weeks.map((week) => {
                     const isActive = activeWeek?.id === week.id;
                     const plannedHeight = Math.max(28, ((week.total_study_items ?? 0) / maxItems) * 96);

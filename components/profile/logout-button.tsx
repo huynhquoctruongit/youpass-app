@@ -53,7 +53,7 @@ export function LogoutButton({ onLogout }: LogoutButtonProps) {
           color="#dc2626"
         />
       )}
-      <Text className="text-red-600 font-semibold text-base">Đăng xuất</Text>
+      <Text className="text-red-600 font-semibold text-base" numberOfLines={1} style={{ flexShrink: 0 }}>Đăng xuất</Text>
     </TouchableOpacity>
   );
 }

@@ -25,6 +25,7 @@ const MAPPING = {
   'pencil.and.outline': 'edit',
   'mic.fill': 'mic',
   'envelope.fill': 'mail-outline',
+  'phone.fill': 'phone',
   'calendar': 'calendar-today',
   'shield.fill': 'verified-user',
 } as IconMapping;

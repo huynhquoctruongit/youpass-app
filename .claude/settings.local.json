@@ -47,7 +47,9 @@
       "Bash(eas build *)",
       "Bash(identify /Users/mac/Documents/Source/Youpass/fe/public/images/bean.png /Users/mac/Documents/Source/Youpass/fe/public/images/dau.png)",
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); e=d['expo']; print\\('name:', e.get\\('name'\\)\\); print\\('icon:', e.get\\('icon'\\)\\); print\\('splash:', e.get\\('splash'\\)\\); print\\('adaptiveIcon:', e.get\\('android',{}\\).get\\('adaptiveIcon'\\)\\)\")",
-      "Bash(python3 -c \"from PIL import Image; print\\('PIL OK'\\)\")"
+      "Bash(python3 -c \"from PIL import Image; print\\('PIL OK'\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}; [print\\(k,v\\) for k,v in deps.items\\(\\) if any\\(x in k for x in ['icon','vector','lucide','react-native-svg']\\)]\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}; [print\\(k,v\\) for k,v in deps.items\\(\\) if any\\(x in k for x in ['reanimated','safe-area','blur']\\)]\")"
     ]
   }
 }
