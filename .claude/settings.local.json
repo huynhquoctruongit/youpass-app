@@ -38,7 +38,16 @@
       "Bash(curl -s https://youpass-notification.onrender.com/v1/devices -H 'x-api-key: d1d2aaa54172d20da8e459a342de52e7da0318b5b41e7d72')",
       "Bash(curl -s https://youpass-notification.onrender.com/health)",
       "Bash(curl -s -X POST https://youpass-notification.onrender.com/v1/devices -H 'Content-Type: application/json' -H 'x-api-key: d1d2aaa54172d20da8e459a342de52e7da0318b5b41e7d72' -d '{\"token\":\"cZOWG-bRTmqfqr2QgYZBrP:APA91bHsMdg_oV544FkPDhbnA30b4s5B06q60kFLUE9uxto0cBGP6axP_OgyY9rpGcmvBCs4yzOQwi3Z4dyVjdf5J-0vyqSu1feXoFeD9ysOuJit1hI8iZU\",\"platform\":\"android\"}')",
-      "Bash(grep -v \"^$\")"
+      "Bash(grep -v \"^$\")",
+      "Bash(python3 -c \"import json; print\\(json.dumps\\(json.load\\(open\\('/Users/mac/Documents/Source/Youpass/youpass-app/yp-notify-be/firebase-service-account.json'\\)\\)\\)\\)\")",
+      "Bash(pbcopy)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('project_id:', d.get\\('project_info',{}\\).get\\('project_id'\\)\\); print\\('package_name:', [c.get\\('client_info',{}\\).get\\('android_client_info',{}\\).get\\('package_name'\\) for c in d.get\\('client',[]\\) if 'android_client_info' in c.get\\('client_info',{}\\)]\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('package:', d.get\\('expo',{}\\).get\\('android',{}\\).get\\('package'\\)\\)\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); android=d.get\\('expo',{}\\).get\\('android',{}\\); print\\('googleServicesFile:', android.get\\('googleServicesFile'\\)\\)\")",
+      "Bash(eas build *)",
+      "Bash(identify /Users/mac/Documents/Source/Youpass/fe/public/images/bean.png /Users/mac/Documents/Source/Youpass/fe/public/images/dau.png)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); e=d['expo']; print\\('name:', e.get\\('name'\\)\\); print\\('icon:', e.get\\('icon'\\)\\); print\\('splash:', e.get\\('splash'\\)\\); print\\('adaptiveIcon:', e.get\\('android',{}\\).get\\('adaptiveIcon'\\)\\)\")",
+      "Bash(python3 -c \"from PIL import Image; print\\('PIL OK'\\)\")"
     ]
   }
 }
