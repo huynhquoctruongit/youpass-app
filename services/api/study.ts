@@ -1,4 +1,5 @@
 import AxiosAPI from "./axios-client";
+import CmsAPI from "./cms-axios-client";
 import type {
   LessonDetail,
   StudyPlanDetail,
@@ -43,7 +44,7 @@ export const studyApi = {
   },
 
   getLessonDetail: async (lessonId: string) => {
-    const res = await AxiosAPI.get(
+    const res = await CmsAPI.get(
       `/items/lesson/${lessonId}?fields=*,documents.*,documents.directus_files_id.*`,
     );
     return unwrap<LessonDetail>(res);

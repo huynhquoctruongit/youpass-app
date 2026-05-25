@@ -9,6 +9,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API": "https://api-stg.youpass.vn",
+        "EXPO_PUBLIC_CMS": "https://cms-stg.youpass.vn",
         "EXPO_PUBLIC_NOTIFY_API": "https://youpass-notification.onrender.com",
         "EXPO_PUBLIC_NOTIFY_API_KEY": "d1d2aaa54172d20da8e459a342de52e7da0318b5b41e7d72"
       }
@@ -17,6 +18,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API": "https://api.youpass.vn",
+        "EXPO_PUBLIC_CMS": "https://cms.youpass.vn",
         "EXPO_PUBLIC_NOTIFY_API": "https://youpass-notification.onrender.com",
         "EXPO_PUBLIC_NOTIFY_API_KEY": "d1d2aaa54172d20da8e459a342de52e7da0318b5b41e7d72"
       }
@@ -25,6 +27,7 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API": "https://api.youpass.vn",
+        "EXPO_PUBLIC_CMS": "https://cms.youpass.vn",
         "EXPO_PUBLIC_NOTIFY_API": "https://youpass-notification.onrender.com",
         "EXPO_PUBLIC_NOTIFY_API_KEY": "d1d2aaa54172d20da8e459a342de52e7da0318b5b41e7d72"
       }
