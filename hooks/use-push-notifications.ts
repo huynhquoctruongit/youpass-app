@@ -49,14 +49,24 @@ export const usePushNotifications = ({
       if (!token || !isMounted) return;
       if (registeredTokenRef.current === token) return;
 
-      try {
-        await notificationsApi.registerDeviceToken({
-          token,
-          platform: getDevicePlatform(),
-        });
-        registeredTokenRef.current = token;
-      } catch (error) {
-        console.warn("[notifications] register device token failed", error);
+      const MAX_RETRIES = 5;
+      const RETRY_DELAY_MS = 30_000;
+
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        if (!isMounted) return;
+        try {
+          await notificationsApi.registerDeviceToken({
+            token,
+            platform: getDevicePlatform(),
+          });
+          registeredTokenRef.current = token;
+          return;
+        } catch (error) {
+          console.warn(`[notifications] register attempt ${attempt}/${MAX_RETRIES} failed`, error);
+          if (attempt < MAX_RETRIES) {
+            await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+          }
+        }
       }
     };
 
