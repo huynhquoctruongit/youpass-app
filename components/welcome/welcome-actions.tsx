@@ -1,102 +1,100 @@
 import { useRouter } from "expo-router";
-import { Text, TouchableOpacity, View } from "react-native";
-import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Pressable, Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-type IconName = Parameters<typeof IconSymbol>[0]["name"];
-
-interface WelcomeAction {
-  id: string;
+interface FeatureCardProps {
   title: string;
   description: string;
-  icon: IconName;
-  route: string;
-  color: string;
+  badge?: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
   bg: string;
+  iconBg: string;
+  iconColor: string;
+  onPress: () => void;
 }
 
-const actions: WelcomeAction[] = [
-  {
-    id: "my-progress",
-    title: "Tiến độ học",
-    description: "Xem roadmap, bài tiếp theo và reflection",
-    icon: "calendar",
-    route: "/(tabs)/my-progress",
-    color: "#f97316",
-    bg: "#fff7ed",
-  },
-  {
-    id: "reading",
-    title: "Reading",
-    description: "Luyện đọc với kho đề phong phú",
-    icon: "book.fill",
-    route: "/(tabs)/explore",
-    color: "#2563eb",
-    bg: "#eff6ff",
-  },
-  {
-    id: "listening",
-    title: "Listening",
-    description: "Nghe – chép – hiểu sâu",
-    icon: "headphones",
-    route: "/(tabs)/explore",
-    color: "#16a34a",
-    bg: "#f0fdf4",
-  },
-  {
-    id: "writing",
-    title: "Writing",
-    description: "Chấm bài tự động với AI",
-    icon: "pencil.and.outline",
-    route: "/(tabs)/explore",
-    color: "#9333ea",
-    bg: "#faf5ff",
-  },
-  {
-    id: "speaking",
-    title: "Speaking",
-    description: "Luyện nói với feedback chi tiết",
-    icon: "mic.fill",
-    route: "/(tabs)/explore",
-    color: "#f97316",
-    bg: "#fff7ed",
-  },
-];
+function FeatureCard({
+  title,
+  description,
+  badge,
+  icon,
+  bg,
+  iconBg,
+  iconColor,
+  onPress,
+}: FeatureCardProps) {
+  return (
+    <Pressable
+      onPress={onPress}
+      android_ripple={{ color: "rgba(0,0,0,0.06)" }}
+      style={({ pressed }) => ({ opacity: pressed ? 0.93 : 1 })}
+    >
+      <View
+        className="rounded-3xl p-5 overflow-hidden"
+        style={{ backgroundColor: bg }}
+      >
+        <View className="flex-row items-start justify-between">
+          <View className="flex-1 pr-4">
+            {badge && (
+              <View className="self-start rounded-full bg-white/30 px-3 py-0.5 mb-3">
+                <Text className="text-xs font-semibold" style={{ color: iconColor }}>
+                  {badge}
+                </Text>
+              </View>
+            )}
+            <Text className="text-xl font-bold text-neutral-900 leading-tight">
+              {title}
+            </Text>
+            <Text className="text-sm text-neutral-500 mt-2 leading-5">
+              {description}
+            </Text>
+            <View
+              className="self-start mt-4 flex-row items-center gap-1.5 rounded-full px-4 py-2"
+              style={{ backgroundColor: iconColor }}
+            >
+              <Text className="text-white text-sm font-semibold">Học ngay</Text>
+              <Ionicons name="arrow-forward" size={14} color="#fff" />
+            </View>
+          </View>
+
+          <View
+            className="w-16 h-16 rounded-2xl items-center justify-center"
+            style={{ backgroundColor: iconBg }}
+          >
+            <Ionicons name={icon} size={32} color={iconColor} />
+          </View>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
 
 export function WelcomeActions() {
   const router = useRouter();
 
   return (
-    <View>
-      <Text className="text-base font-semibold text-neutral-900 mb-3">
-        Bắt đầu nào
-      </Text>
-      <View className="flex-row flex-wrap -mx-1.5">
-        {actions.map((action) => (
-          <View key={action.id} className="w-1/2 px-1.5 mb-3">
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => router.push(action.route as never)}
-              className="bg-white rounded-2xl p-4 border border-neutral-100"
-            >
-              <View
-                className="w-10 h-10 rounded-xl items-center justify-center mb-3"
-                style={{ backgroundColor: action.bg }}
-              >
-                <IconSymbol name={action.icon} size={22} color={action.color} />
-              </View>
-              <Text className="text-neutral-900 font-semibold">
-                {action.title}
-              </Text>
-              <Text
-                className="text-neutral-500 text-xs mt-1 leading-4"
-                numberOfLines={2}
-              >
-                {action.description}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-      </View>
+    <View className="gap-4">
+      <FeatureCard
+        title="Sổ từ vựng"
+        description="Ôn luyện từ vựng IELTS, tra nghĩa và lưu từ yêu thích của bạn"
+        badge="Từ vựng"
+        icon="book"
+        bg="#FFF7ED"
+        iconBg="#FFEDD5"
+        iconColor="#F97316"
+        onPress={() => router.push("/(tabs)/explore" as never)}
+      />
+
+      <FeatureCard
+        title="Tiến độ học"
+        description="Theo dõi roadmap, bài học tiếp theo và lịch sử hoàn thành"
+        badge="Lộ trình"
+        icon="bar-chart"
+        bg="#F0F9FF"
+        iconBg="#E0F2FE"
+        iconColor="#0284C7"
+        onPress={() => router.push("/(tabs)/my-progress" as never)}
+      />
     </View>
   );
 }

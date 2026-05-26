@@ -13,7 +13,7 @@ const TAB_CONFIG: Record<
   { label: string; icon: IoniconsName; iconActive: IoniconsName }
 > = {
   index: { label: "Trang chủ", icon: "home-outline", iconActive: "home" },
-  explore: { label: "Luyện tập", icon: "book-outline", iconActive: "book" },
+  explore: { label: "Từ vựng", icon: "book-outline", iconActive: "book" },
   "my-progress": { label: "Tiến độ", icon: "bar-chart-outline", iconActive: "bar-chart" },
   profile: { label: "Cá nhân", icon: "person-outline", iconActive: "person" },
 };

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, Text, TouchableOpacity } from "react-native";
-import { IconSymbol } from "@/components/ui/icon-symbol";
+import { ActivityIndicator, Alert, Text, TouchableOpacity, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 interface LogoutButtonProps {
   onLogout: () => Promise<void> | void;
@@ -15,11 +15,7 @@ export function LogoutButton({ onLogout }: LogoutButtonProps) {
       "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này?",
       [
         { text: "Huỷ", style: "cancel" },
-        {
-          text: "Đăng xuất",
-          style: "destructive",
-          onPress: handleLogout,
-        },
+        { text: "Đăng xuất", style: "destructive", onPress: handleLogout },
       ],
     );
   };
@@ -29,7 +25,7 @@ export function LogoutButton({ onLogout }: LogoutButtonProps) {
     setLoading(true);
     try {
       await onLogout();
-    } catch (error) {
+    } catch {
       Alert.alert("Có lỗi xảy ra", "Vui lòng thử lại.");
     } finally {
       setLoading(false);
@@ -40,20 +36,33 @@ export function LogoutButton({ onLogout }: LogoutButtonProps) {
     <TouchableOpacity
       onPress={confirmLogout}
       disabled={loading}
-      activeOpacity={0.85}
-      className="flex-row items-center justify-center gap-2 bg-white border border-red-200 rounded-full py-3.5 px-6"
-      style={{ opacity: loading ? 0.6 : 1 }}
+      activeOpacity={0.82}
+      style={{
+        borderRadius: 20,
+        overflow: "hidden",
+        opacity: loading ? 0.65 : 1,
+        backgroundColor: "#EF4444",
+        shadowColor: "#EF4444",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
+      }}
     >
-      {loading ? (
-        <ActivityIndicator size="small" color="#dc2626" />
-      ) : (
-        <IconSymbol
-          name="rectangle.portrait.and.arrow.right.fill"
-          size={18}
-          color="#dc2626"
-        />
-      )}
-      <Text className="text-red-600 font-semibold text-base" numberOfLines={1} style={{ flexShrink: 0 }}>Đăng xuất</Text>
+      <View className="flex-row items-center justify-center gap-2.5 py-4">
+        {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Ionicons name="log-out-outline" size={20} color="#fff" />
+        )}
+        <Text
+          className="text-white font-bold text-base"
+          numberOfLines={1}
+          style={{ flexShrink: 0 }}
+        >
+          Đăng xuất
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 }
