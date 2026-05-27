@@ -75,6 +75,9 @@ export function FlashcardScreen({
   const [done, setDone]             = useState(false);
   const [results, setResults]       = useState({ mastered: 0, partial: 0, notYet: 0 });
 
+  // ── Init guard — prevents re-initialisation when `words` ref changes ────────
+  const hasInitRef = useRef(false);
+
   // ── Reanimated ──────────────────────────────────────────────────────────────
   const flipVal   = useSharedValue(0); // 0 = front, 1 = back
   const slideX    = useSharedValue(0);
@@ -104,8 +107,18 @@ export function FlashcardScreen({
   }));
 
   // ── Initialise on open ──────────────────────────────────────────────────────
+  // IMPORTANT: depend on `words.length` (not `words`) so that status-update calls
+  // to onStatusChange — which make the parent re-create the `words` array — do NOT
+  // reset the queue and counter back to zero.  The `hasInitRef` guard ensures we
+  // only run the init block once per modal open/close cycle.
   useEffect(() => {
-    if (!visible || words.length === 0) return;
+    if (!visible) {
+      hasInitRef.current = false; // reset when modal closes so next open re-inits
+      return;
+    }
+    if (hasInitRef.current || words.length === 0) return;
+    hasInitRef.current = true;
+
     const initial = mode === "learn" ? weightedShuffle(words) : [...words];
     setQueue(initial);
     setIdx(0);
@@ -115,7 +128,7 @@ export function FlashcardScreen({
     flipVal.value   = 0;
     slideX.value    = 0;
     cardAlpha.value = 1;
-  }, [visible, words, mode]);
+  }, [visible, words.length, mode]);
 
   const word = queue[idx];
 
