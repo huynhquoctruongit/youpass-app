@@ -8,7 +8,7 @@ export interface UserProfile {
   fullname?: string;
   first_name?: string;
   last_name?: string;
-  phone?: string;
+  phone_number?: string;
   avatar?: string;
   external_avatar?: string;
   role?: { name: string };
@@ -26,7 +26,17 @@ interface AuthContextValue {
   getProfile: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+const defaultContext: AuthContextValue = {
+  profile: null,
+  isLogin: null,
+  isLoading: true,
+  loginWithGoogle: async () => {},
+  loginWithEmailPassword: async () => {},
+  logout: async () => {},
+  getProfile: async () => {},
+};
+
+const AuthContext = createContext<AuthContextValue>(defaultContext);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -94,7 +104,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useAuthContext() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuthContext must be used inside AuthProvider");
-  return ctx;
+  return useContext(AuthContext);
 }

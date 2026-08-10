@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "yp",
-    "slug": "yp",
+    "name": "YouPass",
+    "slug": "youpass-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,14 +14,17 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "vn.youpass.app",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["remote-notification"]
       }
     },
     "android": {
       "package": "vn.youpass.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -35,6 +38,16 @@
     },
     "plugins": [
       "expo-router",
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -55,7 +68,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "af6504cf-52f7-4ae8-b0a1-0c1d8354922f"
+        "projectId": "549cbfbd-29f9-47fe-8c36-099e521fb575"
       }
     }
   }

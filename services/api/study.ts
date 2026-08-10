@@ -1,5 +1,12 @@
 import AxiosAPI from "./axios-client";
-import type { StudyPlanDetail, StudyPlanListResponse, StudyWeekDetail, WeekReflectionFormData } from "@/types/study";
+import CmsAPI from "./cms-axios-client";
+import type {
+  LessonDetail,
+  StudyPlanDetail,
+  StudyPlanListResponse,
+  StudyWeekDetail,
+  WeekReflectionFormData,
+} from "@/types/study";
 
 const unwrap = <T>(response: { data?: { data?: T } }) => response.data?.data as T;
 
@@ -34,5 +41,12 @@ export const studyApi = {
   completeStudyItem: async (itemId: string, payload: { completed_duration: number; started_at: string }) => {
     const res = await AxiosAPI.patch(`/v1/study-items/${itemId}/complete`, payload);
     return unwrap(res);
+  },
+
+  getLessonDetail: async (lessonId: string) => {
+    const res = await CmsAPI.get(
+      `/items/lesson/${lessonId}?fields=*,documents.*,documents.directus_files_id.*`,
+    );
+    return unwrap<LessonDetail>(res);
   },
 };
