@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
+import { attachNetworkLogger } from "./network-logger";
 
 const CMS_BASE_URL = process.env.EXPO_PUBLIC_CMS || "";
 
@@ -17,5 +18,7 @@ CmsAPI.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+attachNetworkLogger(CmsAPI, "CMS");
 
 export default CmsAPI;

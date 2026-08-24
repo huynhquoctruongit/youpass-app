@@ -13,6 +13,7 @@ export default function TabLayout() {
     >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="explore" />
+      <Tabs.Screen name="speaking" />
       <Tabs.Screen name="my-progress" />
       <Tabs.Screen name="profile" />
     </Tabs>

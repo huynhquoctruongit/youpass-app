@@ -3,17 +3,18 @@ import * as SecureStore from "expo-secure-store";
 import { getDeviceId } from "@/services/helpers/device-id";
 import { attachNetworkLogger } from "./network-logger";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API || "";
+const LORVAIX_BASE_URL =
+  process.env.EXPO_PUBLIC_LORVAIX || "https://lorvaix-stg.youpass.vn";
 
-// Axios instance cho Go API (giống AxiosAPI bên homepage)
-export const AxiosAPI = axios.create({
-  baseURL: API_BASE_URL,
+// Axios instance cho Lorvaix (speaking transcript / submit / grade)
+export const AxiosLorvaix = axios.create({
+  baseURL: LORVAIX_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-AxiosAPI.interceptors.request.use(async (config) => {
+AxiosLorvaix.interceptors.request.use(async (config) => {
   const [token, deviceId] = await Promise.all([
     SecureStore.getItemAsync("auth_token"),
     getDeviceId(),
@@ -25,7 +26,7 @@ AxiosAPI.interceptors.request.use(async (config) => {
   return config;
 });
 
-AxiosAPI.interceptors.response.use(
+AxiosLorvaix.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error?.response?.status === 401) {
@@ -35,6 +36,6 @@ AxiosAPI.interceptors.response.use(
   }
 );
 
-attachNetworkLogger(AxiosAPI, "Go");
+attachNetworkLogger(AxiosLorvaix, "Lorvaix");
 
-export default AxiosAPI;
+export default AxiosLorvaix;

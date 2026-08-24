@@ -14,6 +14,7 @@ const TAB_CONFIG: Record<
 > = {
   index: { label: "Trang chủ", icon: "home-outline", iconActive: "home" },
   explore: { label: "Từ vựng", icon: "book-outline", iconActive: "book" },
+  speaking: { label: "Speaking", icon: "mic-outline", iconActive: "mic" },
   "my-progress": { label: "Tiến độ", icon: "bar-chart-outline", iconActive: "bar-chart" },
   profile: { label: "Cá nhân", icon: "person-outline", iconActive: "person" },
 };

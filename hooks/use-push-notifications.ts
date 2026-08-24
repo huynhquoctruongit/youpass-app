@@ -8,6 +8,7 @@ import {
   getDevicePlatform,
   getFcmToken,
   getInitialNotification,
+  isPushNotificationsAvailable,
   onForegroundMessage,
   onNotificationOpenedApp,
   onTokenRefresh,
@@ -37,36 +38,43 @@ export const usePushNotifications = ({
   const registeredTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isLogin) return;
+    if (!isLogin || !isPushNotificationsAvailable()) return;
 
     let isMounted = true;
 
     const register = async () => {
-      const granted = await requestNotificationPermission();
-      if (!granted) return;
+      try {
+        const granted = await requestNotificationPermission();
+        if (!granted) return;
 
-      const token = await getFcmToken();
-      if (!token || !isMounted) return;
-      if (registeredTokenRef.current === token) return;
+        const token = await getFcmToken();
+        if (!token || !isMounted) return;
+        if (registeredTokenRef.current === token) return;
 
-      const MAX_RETRIES = 5;
-      const RETRY_DELAY_MS = 30_000;
+        const MAX_RETRIES = 5;
+        const RETRY_DELAY_MS = 30_000;
 
-      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-        if (!isMounted) return;
-        try {
-          await notificationsApi.registerDeviceToken({
-            token,
-            platform: getDevicePlatform(),
-          });
-          registeredTokenRef.current = token;
-          return;
-        } catch (error) {
-          console.warn(`[notifications] register attempt ${attempt}/${MAX_RETRIES} failed`, error);
-          if (attempt < MAX_RETRIES) {
-            await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+          if (!isMounted) return;
+          try {
+            await notificationsApi.registerDeviceToken({
+              token,
+              platform: getDevicePlatform(),
+            });
+            registeredTokenRef.current = token;
+            return;
+          } catch (error) {
+            console.warn(
+              `[notifications] register attempt ${attempt}/${MAX_RETRIES} failed`,
+              error,
+            );
+            if (attempt < MAX_RETRIES) {
+              await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+            }
           }
         }
+      } catch (error) {
+        console.warn("[notifications] register skipped", error);
       }
     };
 
@@ -92,6 +100,8 @@ export const usePushNotifications = ({
   }, [isLogin]);
 
   useEffect(() => {
+    if (!isPushNotificationsAvailable()) return;
+
     const unsubscribeForeground = onForegroundMessage((message) => {
       onForeground(message);
     });
