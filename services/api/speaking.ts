@@ -3,7 +3,9 @@ import { AxiosLorvaix } from "./lorvaix-axios-client";
 import {
   mergeBandScoreDetail,
   normalizeAnswerStatus,
+  normalizePronunciationCorrections,
   type SpeakingGradeResult,
+  type SpeakingHighlight,
 } from "@/services/helpers/speaking-grade";
 
 export type SpeakingPart = 1 | 2 | 3;
@@ -244,7 +246,75 @@ export const speakingApi = {
 
   getAnswerDetail: async (answerId: string): Promise<SpeakingAnswerDetail> => {
     const res = await AxiosAPI.get(`/v1/answers/${answerId}`);
-    return res.data?.data?.data ?? res.data?.data ?? {};
+    const detail = res.data?.data?.data ?? res.data?.data ?? {};
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log("[SpeakingGrade] answerDetail keys", {
+        answerId,
+        topLevelKeys: Object.keys(detail || {}),
+        band_score: detail?.band_score,
+        band_score_detail: detail?.band_score_detail,
+        review_detail: detail?.review_detail,
+        hasReviewTemplate: !!detail?.review_detail?.review_template,
+      });
+    }
+    return detail;
+  },
+
+  /**
+   * Lấy danh sách lỗi phát âm cho pipeline "speaking-with-ai"
+   * (review_template === "speaking"). Web dùng endpoint này để đổ bảng
+   * "Sửa lỗi Phát âm" — dữ liệu KHÔNG nằm trong /answers/{id}/status.highlights.
+   */
+  getPronunciationCorrections: async (
+    answerId: string
+  ): Promise<SpeakingHighlight[]> => {
+    const res = await AxiosAPI.get("/v1/pronunciation/corrections", {
+      params: {
+        answer_id: answerId,
+        page: 1,
+        page_size: 400,
+        limit: 100,
+      },
+    });
+    const payload = res.data?.data?.data ?? res.data?.data ?? {};
+    const items: any[] = payload.items ?? payload ?? [];
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log("[SpeakingGrade] pronunciationCorrections", {
+        answerId,
+        count: Array.isArray(items) ? items.length : 0,
+        sample: Array.isArray(items) ? items.slice(0, 2) : items,
+      });
+    }
+    return normalizePronunciationCorrections(items);
+  },
+
+  /**
+   * Bổ sung lỗi phát âm (từ /pronunciation/corrections) vào grade sau khi bài
+   * đã chấm xong. Nếu /status.highlights đã có sẵn lỗi PR thì giữ nguyên,
+   * chỉ thêm khi chưa có (pipeline speaking-with-ai không trả PR ở /status).
+   */
+  enrichWithPronunciation: async (
+    answerId: string,
+    grade: SpeakingGradeResult
+  ): Promise<SpeakingGradeResult> => {
+    const alreadyHasPr = (grade.highlights || []).some(
+      (item) => item.criterion === "PR"
+    );
+    if (alreadyHasPr) return grade;
+    try {
+      const corrections = await speakingApi.getPronunciationCorrections(
+        answerId
+      );
+      if (corrections.length === 0) return grade;
+      return {
+        ...grade,
+        highlights: [...(grade.highlights || []), ...corrections],
+      };
+    } catch {
+      return grade;
+    }
   },
 
   uploadRecording: async (uri: string): Promise<string> => {
@@ -358,7 +428,10 @@ export const speakingApi = {
       }
 
       if (status.isFailed) return "failed";
-      if (status.isReviewed || status.overall != null) return "graded";
+      // QUAN TRỌNG: chỉ coi là "graded" khi status === "reviewed" (giống web).
+      // Không dừng sớm chỉ vì đã có band score (overall), vì highlights được
+      // sinh ở bước GENERATING_HIGHLIGHTS SAU khi có điểm — dừng sớm sẽ mất lỗi.
+      if (status.isReviewed) return "graded";
       await new Promise((resolve) => setTimeout(resolve, intervalMs));
     }
     return "timeout";

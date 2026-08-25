@@ -1,26 +1,17 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Audio } from "expo-av";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   Text,
   View,
 } from "react-native";
+import { SpeakingErrorAnalysis } from "@/components/speaking/speaking-error-analysis";
 import {
-  ALL_GROUP,
-  CRITERION_GROUPS,
-  buildSegments,
-  countHighlights,
-  filterHighlights,
   formatBand,
-  getCriterion,
-  getGroupOfCriterion,
-  type CriterionGroupId,
   type SpeakingGradeResult,
-  type SpeakingHighlight,
 } from "@/services/helpers/speaking-grade";
 
 const PRIMARY = "#F97316";
@@ -36,208 +27,6 @@ type Props = {
   readOnly?: boolean;
 };
 
-function HighlightDetailModal({
-  item,
-  visible,
-  onClose,
-}: {
-  item: SpeakingHighlight | null;
-  visible: boolean;
-  onClose: () => void;
-}) {
-  const criterion = getCriterion(item?.criterion);
-  const soundRef = useRef<Audio.Sound | null>(null);
-
-  useEffect(() => {
-    return () => {
-      void soundRef.current?.unloadAsync().catch(() => undefined);
-    };
-  }, []);
-
-  const playUrl = async (url?: string) => {
-    if (!url) return;
-    try {
-      if (soundRef.current) await soundRef.current.unloadAsync();
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: url },
-        { shouldPlay: true }
-      );
-      soundRef.current = sound;
-    } catch {
-      // ignore
-    }
-  };
-
-  if (!item) return null;
-
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(15,23,42,0.45)",
-          justifyContent: "center",
-          padding: 20,
-        }}
-        onPress={onClose}
-      >
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          style={{
-            backgroundColor: "#fff",
-            borderRadius: 18,
-            padding: 16,
-            maxHeight: "70%",
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 12,
-            }}
-          >
-            <Text style={{ fontSize: 16, fontWeight: "800", color: "#111827" }}>
-              {criterion?.popoverTitle || "Chi tiết lỗi"}
-            </Text>
-            <Pressable onPress={onClose} hitSlop={10}>
-              <Ionicons name="close" size={20} color="#6B7280" />
-            </Pressable>
-          </View>
-
-          {criterion?.popoverVariant === "pronunciation" ? (
-            <View style={{ gap: 10 }}>
-              <View
-                style={{
-                  borderRadius: 14,
-                  borderWidth: 1,
-                  borderColor: "#FECACA",
-                  backgroundColor: "#FEF2F2",
-                  padding: 12,
-                }}
-              >
-                <Text style={{ fontSize: 13, fontWeight: "700", color: "#DC2626" }}>
-                  Bạn nói
-                </Text>
-                <Text style={{ marginTop: 4, color: "#B91C1C" }}>
-                  {item.pronunciation?.saidIpa || "--"}
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => playUrl(item.pronunciation?.correctAudioUrl)}
-                style={{
-                  borderRadius: 14,
-                  borderWidth: 1,
-                  borderColor: "#A7F3D0",
-                  backgroundColor: "#ECFDF5",
-                  padding: 12,
-                }}
-              >
-                <Text style={{ fontSize: 13, fontWeight: "700", color: "#059669" }}>
-                  Phát âm đúng
-                </Text>
-                <Text style={{ marginTop: 4, color: "#047857" }}>
-                  {item.pronunciation?.correctIpa || "--"}
-                </Text>
-              </Pressable>
-              {!!item.pronunciation?.word && (
-                <Text style={{ color: "#6B7280", fontSize: 13 }}>
-                  Từ:{" "}
-                  <Text style={{ fontWeight: "700", color: "#111827" }}>
-                    {item.pronunciation.word}
-                  </Text>
-                  {item.pronunciation.wordClass &&
-                  item.pronunciation.wordClass !== "other"
-                    ? ` · ${item.pronunciation.wordClass}`
-                    : ""}
-                </Text>
-              )}
-            </View>
-          ) : (
-            <View>
-              {!!item.why && (
-                <Text style={{ fontSize: 14, lineHeight: 22, color: "#374151" }}>
-                  {item.why}
-                </Text>
-              )}
-              {!!item.fix && (
-                <View
-                  style={{
-                    marginTop: 12,
-                    paddingTop: 12,
-                    borderTopWidth: 1,
-                    borderTopColor: "#E5E7EB",
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    gap: 6,
-                  }}
-                >
-                  <Text style={{ color: "#6B7280", fontSize: 13 }}>
-                    {criterion?.fixLabel}
-                  </Text>
-                  <Text style={{ color: "#059669", fontWeight: "700", fontSize: 13 }}>
-                    {item.fix}
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
-}
-
-function TranscriptWithHighlights({
-  transcript,
-  highlights,
-  groupId,
-}: {
-  transcript: string;
-  highlights: SpeakingHighlight[];
-  groupId: CriterionGroupId;
-}) {
-  const [selected, setSelected] = useState<SpeakingHighlight | null>(null);
-  const segments = useMemo(
-    () => buildSegments(transcript, filterHighlights(highlights, groupId)),
-    [transcript, highlights, groupId]
-  );
-
-  return (
-    <View>
-      <Text style={{ fontSize: 15, lineHeight: 28, color: "#1F2937" }}>
-        {segments.map((segment) => {
-          if (!segment.item) {
-            return <Text key={segment.key}>{segment.text}</Text>;
-          }
-          const group = getGroupOfCriterion(segment.item.criterion);
-          return (
-            <Text
-              key={segment.key}
-              onPress={() => setSelected(segment.item)}
-              style={{
-                backgroundColor: group?.markBg || "#FEE2E2",
-                borderBottomWidth: 2,
-                borderBottomColor: group?.markBorder || "#FCA5A5",
-                color: "#111827",
-                fontWeight: "600",
-              }}
-            >
-              {segment.text}
-            </Text>
-          );
-        })}
-      </Text>
-      <HighlightDetailModal
-        item={selected}
-        visible={!!selected}
-        onClose={() => setSelected(null)}
-      />
-    </View>
-  );
-}
-
 export function SpeakingGradeResultView({
   grade,
   questionTitle,
@@ -248,7 +37,6 @@ export function SpeakingGradeResultView({
   onPlayQuestion,
   readOnly,
 }: Props) {
-  const [tab, setTab] = useState<CriterionGroupId>(ALL_GROUP);
   const [playingAudio, setPlayingAudio] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
   const highlights = grade.highlights || [];
@@ -409,6 +197,50 @@ export function SpeakingGradeResultView({
         </View>
       </View>
 
+      {loading && !grade.transcript ? (
+        <View
+          style={{
+            backgroundColor: "#fff",
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: "#E5E7EB",
+            paddingVertical: 28,
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <ActivityIndicator color={PRIMARY} />
+          <Text style={{ color: "#6B7280", fontSize: 13 }}>
+            Đang tải kết quả chấm bài...
+          </Text>
+        </View>
+      ) : (
+        <SpeakingErrorAnalysis
+          transcript={grade.transcript}
+          highlights={highlights}
+          scoring={!isReviewed && !isFailed}
+          failed={isFailed}
+          recordingUrl={grade.audioUrl}
+        />
+      )}
+
+      {isFailed && !!grade.transcript && (
+        <View
+          style={{
+            borderRadius: 16,
+            backgroundColor: "#FEF2F2",
+            padding: 14,
+          }}
+        >
+          <Text style={{ fontWeight: "700", color: "#B91C1C" }}>
+            Đã có lỗi xảy ra khi chấm bài
+          </Text>
+          <Text style={{ marginTop: 6, color: "#7F1D1D", fontSize: 13 }}>
+            Bạn vui lòng thử lại hoặc báo về YouPass.
+          </Text>
+        </View>
+      )}
+
       <View
         style={{
           backgroundColor: "#fff",
@@ -418,138 +250,8 @@ export function SpeakingGradeResultView({
           overflow: "hidden",
         }}
       >
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ padding: 10, gap: 8 }}
-        >
-          {CRITERION_GROUPS.map((group) => {
-            const active = tab === group.id;
-            const errorCount = countHighlights(highlights, group.id);
-            return (
-              <Pressable
-                key={group.id}
-                onPress={() => setTab(group.id)}
-                style={{
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                  borderRadius: 12,
-                  backgroundColor: active ? "#FFF7ED" : "#F8FAFC",
-                  borderWidth: 1,
-                  borderColor: active ? PRIMARY : "#E5E7EB",
-                  minWidth: 110,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: "700",
-                    color: active ? PRIMARY : "#4B5563",
-                  }}
-                  numberOfLines={2}
-                >
-                  {group.label}
-                </Text>
-                <View
-                  style={{
-                    marginTop: 6,
-                    alignSelf: "flex-start",
-                    backgroundColor: group.badgeBg,
-                    borderRadius: 999,
-                    paddingHorizontal: 8,
-                    paddingVertical: 3,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 4,
-                  }}
-                >
-                  {!isReviewed && !isFailed && (
-                    <ActivityIndicator size="small" color={group.badgeText} />
-                  )}
-                  <Text
-                    style={{
-                      fontSize: 11,
-                      fontWeight: "700",
-                      color: group.badgeText,
-                    }}
-                  >
-                    {isFailed
-                      ? "Lỗi"
-                      : isReviewed
-                        ? `${errorCount} lỗi`
-                        : "Đang chấm"}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-
-        <View style={{ paddingHorizontal: 14, paddingBottom: 16 }}>
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "800",
-              color: "#111827",
-              marginBottom: 8,
-            }}
-          >
-            Bài nói của bạn
-          </Text>
-
-          {loading && !grade.transcript ? (
-            <View style={{ paddingVertical: 28, alignItems: "center", gap: 8 }}>
-              <ActivityIndicator color={PRIMARY} />
-              <Text style={{ color: "#6B7280", fontSize: 13 }}>
-                Đang tải kết quả chấm bài...
-              </Text>
-            </View>
-          ) : grade.transcript ? (
-            <TranscriptWithHighlights
-              transcript={grade.transcript}
-              highlights={highlights}
-              groupId={tab}
-            />
-          ) : (
-            <View
-              style={{
-                borderRadius: 12,
-                backgroundColor: "#FEF2F2",
-                padding: 14,
-              }}
-            >
-              <Text style={{ fontWeight: "700", color: "#B91C1C" }}>
-                Không nhận được nội dung bài nói
-              </Text>
-              <Text style={{ marginTop: 6, color: "#7F1D1D", fontSize: 13 }}>
-                Bạn vui lòng báo về YouPass, chúng mình sẽ phản hồi sớm nhất!
-              </Text>
-            </View>
-          )}
-
-          {isFailed && !!grade.transcript && (
-            <View
-              style={{
-                marginTop: 12,
-                borderRadius: 12,
-                backgroundColor: "#FEF2F2",
-                padding: 14,
-              }}
-            >
-              <Text style={{ fontWeight: "700", color: "#B91C1C" }}>
-                Đã có lỗi xảy ra khi chấm bài
-              </Text>
-              <Text style={{ marginTop: 6, color: "#7F1D1D", fontSize: 13 }}>
-                Bạn vui lòng thử lại hoặc báo về YouPass.
-              </Text>
-            </View>
-          )}
-        </View>
-
         <View
           style={{
-            borderTopWidth: 1,
-            borderTopColor: "#F3F4F6",
             padding: 14,
             gap: 12,
           }}

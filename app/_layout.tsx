@@ -1,5 +1,6 @@
 import "react-native-gesture-handler";
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Audio, InterruptionModeIOS } from "expo-av";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
@@ -42,6 +43,18 @@ function PushNotificationsBridge() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  // Cấu hình audio toàn cục 1 lần: đảm bảo phát tiếng cả khi máy bật im lặng
+  // (iOS) và không bị các lần setAudioMode khác reset về mặc định.
+  useEffect(() => {
+    void Audio.setAudioModeAsync({
+      playsInSilentModeIOS: true,
+      allowsRecordingIOS: false,
+      interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+      staysActiveInBackground: false,
+      shouldDuckAndroid: true,
+    }).catch(() => undefined);
+  }, []);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>

@@ -246,36 +246,71 @@ export function normalizeAnswerStatus(raw: unknown): SpeakingGradeResult {
     isReviewed ||
     markingUpper === "COMPLETED";
 
-  const highlights = ((data.highlights as any[]) || [])
-    .map((item: any, index: number) => {
-      const pr = item.pronunciation_correction;
-      return {
-        ...item,
-        id: String(item.id ?? `hl-${index}`),
-        criterion: String(item.criterion || "").toUpperCase(),
-        start: Number(item.start),
-        end: Number(item.end),
-        why: item.why,
-        fix: item.fix,
-        pronunciation: pr
-          ? {
-              word: pr.mispronounced_word,
-              wordClass: pr.word_class,
-              saidIpa: pr.mispronounced_word_ipa,
-              correctIpa: pr.corrected_word_ipa,
-              correctAudioUrl: pr.corrected_word_audio,
-              audioStart: pr.mispronounced_word_time_range?.start_time,
-              audioEnd: pr.mispronounced_word_time_range?.end_time,
-            }
-          : null,
-      } as SpeakingHighlight;
-    })
-    .filter(
+  const rawHighlights = (data.highlights as any[]) || [];
+  const mappedHighlights = rawHighlights.map((item: any, index: number) => {
+    const pr = item.pronunciation_correction;
+    return {
+      ...item,
+      id: String(item.id ?? `hl-${index}`),
+      criterion: String(item.criterion || "").toUpperCase(),
+      start: Number(item.start),
+      end: Number(item.end),
+      why: item.why,
+      fix: item.fix,
+      pronunciation: pr
+        ? {
+            word: pr.mispronounced_word,
+            wordClass: pr.word_class,
+            saidIpa: pr.mispronounced_word_ipa,
+            correctIpa: pr.corrected_word_ipa,
+            correctAudioUrl: pr.corrected_word_audio,
+            audioStart: pr.mispronounced_word_time_range?.start_time,
+            audioEnd: pr.mispronounced_word_time_range?.end_time,
+          }
+        : null,
+    } as SpeakingHighlight;
+  });
+
+  const highlights = mappedHighlights.filter(
+    (item) =>
+      item.start >= 0 &&
+      item.end > item.start &&
+      item.end <= transcript.length
+  );
+
+  if (__DEV__ && rawHighlights.length > 0) {
+    const dropped = mappedHighlights.filter(
       (item) =>
-        item.start >= 0 &&
-        item.end > item.start &&
-        item.end <= transcript.length
+        !(
+          item.start >= 0 &&
+          item.end > item.start &&
+          item.end <= transcript.length
+        )
     );
+    // eslint-disable-next-line no-console
+    console.log("[SpeakingGrade] highlights debug", {
+      transcriptLength: transcript.length,
+      rawCount: rawHighlights.length,
+      keptCount: highlights.length,
+      droppedCount: dropped.length,
+      criteria: mappedHighlights.map((h) => h.criterion),
+      sampleRaw: rawHighlights.slice(0, 3),
+      droppedReasons: dropped.slice(0, 5).map((h) => ({
+        criterion: h.criterion,
+        start: h.start,
+        end: h.end,
+        transcriptLength: transcript.length,
+        reason:
+          !(h.start >= 0)
+            ? "start<0"
+            : !(h.end > h.start)
+              ? "end<=start"
+              : h.end > transcript.length
+                ? "end>transcriptLength"
+                : "?",
+      })),
+    });
+  }
 
   return {
     answerId: (data.answer_id as string | number | null) != null
@@ -298,6 +333,46 @@ export function normalizeAnswerStatus(raw: unknown): SpeakingGradeResult {
     })),
     highlights,
   };
+}
+
+/**
+ * Chuẩn hoá dữ liệu từ endpoint /v1/pronunciation/corrections (pipeline
+ * speaking-with-ai) sang shape SpeakingHighlight (criterion = "PR") để tái
+ * dùng bảng "Sửa lỗi Phát âm". Các item này KHÔNG có vị trí start/end trong
+ * transcript nên đặt start/end = -1 (chỉ hiển thị ở bảng, không highlight chữ).
+ */
+export function normalizePronunciationCorrections(
+  items: any[]
+): SpeakingHighlight[] {
+  return (items || []).map((item: any, index: number) => {
+    const timeRange = item.mispronounced_word_time_range;
+    return {
+      id: String(item.id ?? `prc-${index}`),
+      criterion: "PR",
+      start: -1,
+      end: -1,
+      why: item.why,
+      fix: item.fix,
+      pronunciation: {
+        word: item.mispronounced_word,
+        wordClass: item.word_class,
+        saidIpa: stripHtmlTags(item.mispronounced_word_ipa),
+        correctIpa: stripHtmlTags(item.corrected_word_ipa),
+        correctAudioUrl: item.corrected_word_audio,
+        audioStart: timeRange?.start_time,
+        audioEnd: timeRange?.end_time,
+      },
+    } as SpeakingHighlight;
+  });
+}
+
+/** Web trả IPA dưới dạng HTML; RN chỉ cần text nên gỡ tag đơn giản. */
+function stripHtmlTags(value?: string): string {
+  if (!value) return "";
+  return String(value)
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
 }
 
 export function mergeBandScoreDetail(

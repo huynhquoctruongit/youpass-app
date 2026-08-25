@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SpeakingErrorAnalysis } from "@/components/speaking/speaking-error-analysis";
 import { SpeakingGradeResultView } from "@/components/speaking/speaking-grade-result";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -120,6 +121,29 @@ export function SpeakingPracticeScreen({
     []
   );
 
+  /**
+   * Sau khi bài đã chấm xong, bổ sung lỗi phát âm từ endpoint riêng
+   * (/pronunciation/corrections) cho pipeline speaking-with-ai, vì các lỗi này
+   * không nằm trong /answers/{id}/status.highlights.
+   */
+  const enrichGradeWithPronunciation = useCallback(
+    async (
+      answerId: string,
+      runId: number,
+      baseGrade: SpeakingGradeResult
+    ) => {
+      if (!answerId || !baseGrade) return;
+      const enriched = await speakingApi.enrichWithPronunciation(
+        answerId,
+        baseGrade
+      );
+      if (cancelledRef.current || gradeRunRef.current !== runId) return;
+      if (enriched === baseGrade) return;
+      setGrade(applyLocalAudioFallback(enriched));
+    },
+    [applyLocalAudioFallback]
+  );
+
   const loadNextQuizList = useCallback(async () => {
     try {
       const tags = await speakingApi.getTopicsByTag(part);
@@ -190,11 +214,16 @@ export function SpeakingPracticeScreen({
         return;
       }
 
-      // Bài đã chấm xong / thất bại → vào thẳng màn kết quả, không cần poll.
-      if (firstStatus && (firstStatus.isReviewed || firstStatus.overall != null)) {
-        setGrade(applyLocalAudioFallback(firstStatus));
+      // Bài đã chấm xong (reviewed → có đủ highlights) → vào thẳng màn kết quả.
+      // Lưu ý: KHÔNG short-circuit chỉ vì có overall band, vì highlights được
+      // sinh ở bước GENERATING_HIGHLIGHTS sau khi có điểm; phải poll tiếp cho
+      // tới khi reviewed mới đủ dữ liệu lỗi (giống web).
+      if (firstStatus?.isReviewed) {
+        const base = applyLocalAudioFallback(firstStatus);
+        setGrade(base);
         setActiveAnswerId(answerId);
         setPhase("graded");
+        void enrichGradeWithPronunciation(answerId, runId, base);
         return;
       }
       if (firstStatus?.isFailed) {
@@ -244,13 +273,14 @@ export function SpeakingPracticeScreen({
 
       if (outcome === "graded") {
         setPhase("graded");
+        if (latest) void enrichGradeWithPronunciation(answerId, runId, latest);
         return;
       }
 
       setError("Không tải được kết quả Speaking. Thử lại nhé.");
       setPhase("idle");
     },
-    [applyLocalAudioFallback, showSavedFree]
+    [applyLocalAudioFallback, showSavedFree, enrichGradeWithPronunciation]
   );
 
   const loadQuiz = useCallback(async () => {
@@ -475,7 +505,10 @@ export function SpeakingPracticeScreen({
       recordingRef.current = null;
       if (!uri) throw new Error("Missing uri");
 
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+      });
       setAudioUri(uri);
       audioUriRef.current = uri;
       setPhase("transcript");
@@ -550,10 +583,14 @@ export function SpeakingPracticeScreen({
       selfSubmittedAnswerIdRef.current = nextAnswerId;
       setActiveAnswerId(nextAnswerId);
 
+      let latest: SpeakingGradeResult | null = null;
       const outcome = await speakingApi.pollGrade(nextAnswerId, {
         shouldStop: () =>
           cancelledRef.current || gradeRunRef.current !== runId,
-        onUpdate: (status) => setGrade(applyLocalAudioFallback(status)),
+        onUpdate: (status) => {
+          latest = applyLocalAudioFallback(status);
+          setGrade(latest);
+        },
       });
 
       if (cancelledRef.current || gradeRunRef.current !== runId) return;
@@ -563,6 +600,9 @@ export function SpeakingPracticeScreen({
           Alert.alert("Chấm bài thất bại", "Bạn thử lại nhé");
         }
         setPhase("graded");
+        if (outcome === "graded" && latest) {
+          void enrichGradeWithPronunciation(nextAnswerId, runId, latest);
+        }
       } else if (outcome === "timeout") {
         Alert.alert("Chấm bài thất bại", "Bạn thử lại nhé");
         setGrade((prev) =>
@@ -958,6 +998,26 @@ export function SpeakingPracticeScreen({
                       </Text>
                     </Pressable>
                   </View>
+                ) : grade?.highlights?.length ? (
+                  <>
+                    <SpeakingErrorAnalysis
+                      transcript={transcript || grade.transcript}
+                      highlights={grade.highlights}
+                      recordingUrl={grade.audioUrl || audioUri}
+                    />
+                    {wordCount < minWords && (
+                      <Text
+                        style={{
+                          marginTop: 8,
+                          fontSize: 12,
+                          color: "#B45309",
+                        }}
+                      >
+                        Gợi ý: Part {part} nên nói khoảng {minWords}+ từ (hiện{" "}
+                        {wordCount} từ).
+                      </Text>
+                    )}
+                  </>
                 ) : (
                   <>
                     <Text

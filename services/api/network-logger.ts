@@ -1,6 +1,6 @@
 import type { AxiosInstance } from "axios";
 
-const truncate = (value: unknown, max = 2000) => {
+const truncate = (value: unknown, max = 20000) => {
   try {
     const text = typeof value === "string" ? value : JSON.stringify(value, null, 2);
     if (!text) return value;
