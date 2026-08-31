@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "YouPass",
-    "slug": "youpass-app",
+    "slug": "yp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,15 +14,20 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "vn.youpass.app",
+      "buildNumber": "1",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["remote-notification"],
+        "UIBackgroundModes": [
+          "remote-notification",
+          "remote-notification"
+        ],
         "NSMicrophoneUsageDescription": "YouPass cần quyền micro để bạn luyện Speaking AI."
       }
     },
     "android": {
       "package": "vn.youpass.app",
+      "versionCode": 1,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
@@ -31,6 +36,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "permissions": [
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
         "RECORD_AUDIO",
         "MODIFY_AUDIO_SETTINGS"
       ],
@@ -57,7 +64,10 @@
         {
           "ios": {
             "useFrameworks": "static",
-            "forceStaticLinking": ["RNFBApp", "RNFBMessaging"]
+            "forceStaticLinking": [
+              "RNFBApp",
+              "RNFBMessaging"
+            ]
           }
         }
       ],
@@ -78,11 +88,17 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
+    "updates": {
+      "url": "https://u.expo.dev/af6504cf-52f7-4ae8-b0a1-0c1d8354922f"
+    },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "549cbfbd-29f9-47fe-8c36-099e521fb575"
+        "projectId": "af6504cf-52f7-4ae8-b0a1-0c1d8354922f"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

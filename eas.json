@@ -16,6 +16,9 @@
     },
     "preview": {
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_API": "https://api.youpass.vn",
         "EXPO_PUBLIC_CMS": "https://cms.youpass.vn",

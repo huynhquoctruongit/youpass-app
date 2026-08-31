@@ -1,6 +1,9 @@
 /* Mock native modules pulled in transitively by the API layer so that
    pure helper logic can be unit-tested without a native runtime. */
 
+// Define __DEV__ for Jest environment
+global.__DEV__ = true;
+
 jest.mock("expo-secure-store", () => ({
   getItemAsync: jest.fn(async () => null),
   setItemAsync: jest.fn(async () => undefined),

@@ -288,7 +288,7 @@ export function FlashcardScreen({
               Hoàn thành! 🎉
             </Text>
             <Text style={{ fontSize: 14, color: "#6B7280", textAlign: "center", marginBottom: 32, lineHeight: 20 }}>
-              Bạn đã ôn xong {words.length} từ trong sổ "{categoryName}"
+              Bạn đã ôn xong {words.length} từ trong sổ &quot;{categoryName}&quot;
             </Text>
 
             {/* Result stats */}
